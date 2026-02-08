@@ -1,7 +1,5 @@
-# 📝 계약서 작성 시스템 (Contract-Creation-System)
-
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=auto&height=200&section=header&text=Contract%20Creation%20System&fontSize=50" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=auto&height=200&section=header&text=📝%20계약서%20작성%20시스템&fontSize=50" />
 </p>
 
 ### 💡 소개
