@@ -101,11 +101,9 @@ export default function App() {
   const initialContent = '<div class="contract-page bg-white mx-auto shadow-sm border border-gray-200" style="width: 210mm; height: 297mm; padding: 25.4mm 19mm;"><p class="text-gray-400 text-center" style="margin-top: 120px;">매입처거래구분을 선택하면 계약서 양식이 표시됩니다.</p></div>';
   const [currentEditorContent, setCurrentEditorContent] = useState<string>(initialContent);
 
-  // [수정] Callback Ref를 사용하여 에디터 마운트 시 내용 즉시 동기화
+  // Callback Ref를 사용하여 에디터 마운트 시 내용 즉시 동기화
   const setEditorRef = useCallback((node: HTMLDivElement | null) => {
-    editorRef.current = node; // ref 객체 업데이트
-    
-    // 노드가 존재하고, 내용이 현재 상태와 다를 때만 업데이트 (초기화 및 Undo/Redo 반영)
+    editorRef.current = node; 
     if (node && currentEditorContent !== undefined && node.innerHTML !== currentEditorContent) {
       node.innerHTML = currentEditorContent;
     }
@@ -307,9 +305,7 @@ export default function App() {
   const handleInput = () => {
     if (isRestoringRef.current || !editorRef.current) return;
     const content = editorRef.current.innerHTML;
-    // 상태 업데이트 (커서 튐 방지를 위해 비교 로직은 ref callback에서 처리됨)
     setCurrentEditorContent(content);
-    
     if (inputTimeoutRef.current) clearTimeout(inputTimeoutRef.current);
     inputTimeoutRef.current = setTimeout(() => { addToHistory(content); }, 500);
   };
@@ -456,7 +452,7 @@ export default function App() {
   const removeTableColumn = () => { if(selectedTable && selectedTable.rows[0].cells.length > 1) { for(let i=0; i<selectedTable.rows.length; i++) { selectedTable.rows[i].deleteCell(selectedTable.rows[i].cells.length-1); } } };
 
   // =================================================================
-  // [핵심] PDF 저장 로직 (수정됨)
+  // [핵심] PDF 저장 로직
   // =================================================================
   const getFileName = (ext: string) => {
     const supplier = basicInfo.supplierName || '매입처명';
@@ -470,7 +466,6 @@ export default function App() {
   };
 
   const executeSave = async (format: 'pdf' | 'jpg' | 'html') => {
-    // [수정] editorRef.current가 없어도(모바일 입력 탭 등) currentEditorContent 상태를 사용하여 저장
     let sourceElement = editorRef.current;
     let tempContainer = null;
 
@@ -510,7 +505,6 @@ export default function App() {
       let currentPage = createNewPage();
       const MAX_HEIGHT_PX = (297 - 40) * 3.78; 
       let currentHeight = 0;
-      // [수정] sourceElement 사용
       const childNodes = Array.from((sourceElement.querySelector('.contract-page') || sourceElement).children) as HTMLElement[];
       for (const child of childNodes) {
         const clone = child.cloneNode(true) as HTMLElement;
@@ -544,7 +538,6 @@ export default function App() {
   };
 
   const handleSaveClick = () => { 
-    // [수정] Ref 대신 State를 확인하여 검증 (화면에 에디터가 없어도 동작)
     if (!currentEditorContent || currentEditorContent.includes('매입처거래구분을 선택하면')) { alert('내용이 없습니다.'); return; }
     if (isMobile) { if (confirm('PDF로 저장하시겠습니까?')) { executeSave('pdf'); } return; }
     setShowSaveModal(true); 
@@ -573,7 +566,8 @@ export default function App() {
   // 4. 컴포넌트 렌더링
   // ----------------------------------------------------------------------
   return (
-    <div className="size-full flex bg-gray-50 relative font-sans">
+    // [수정 1] h-screen, overflow-hidden으로 전체 화면 고정
+    <div className="h-screen w-full flex bg-gray-50 relative font-sans overflow-hidden">
        
       {showResetConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -622,7 +616,8 @@ export default function App() {
 
       {!isMobile && (
         <>
-          <div className="w-[30%] bg-white border-r border-gray-300 overflow-y-auto">
+          {/* [수정 2] 좌측 사이드바: h-full 적용으로 독립 스크롤 */}
+          <div className="w-[30%] h-full bg-white border-r border-gray-300 overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-[#5c7cfa]">
                 <h1 className="text-lg font-semibold text-[#3e5168]">계약서 작성 시스템</h1>
@@ -685,21 +680,24 @@ export default function App() {
             </div>
           </div>
 
-          <div className="w-[50%] bg-gray-100 overflow-y-auto">
-            <div className="sticky top-0 z-10 bg-gray-100 p-6 pb-4 flex justify-between items-center">
+          {/* [수정 3] 중앙 영역: flex-col로 분리하여 헤더 고정, 바디만 스크롤 */}
+          <div className="w-[50%] h-full bg-gray-100 flex flex-col relative">
+            {/* 고정된 헤더 */}
+            <div className="px-6 py-4 flex justify-between items-center bg-gray-100 shrink-0 border-b border-gray-200 z-10">
               <h3 className="text-lg font-semibold text-[#3e5168]">계약서 내용</h3>
               <div className="flex gap-2">
                 <button onMouseDown={(e) => e.preventDefault()} onClick={handleUndo} disabled={historyIndex <= 0} className="p-2 bg-white border rounded shadow-sm disabled:opacity-30"><Undo className="w-4 h-4" /></button>
                 <button onMouseDown={(e) => e.preventDefault()} onClick={handleRedo} disabled={historyIndex >= history.length - 1} className="p-2 bg-white border rounded shadow-sm disabled:opacity-30"><Redo className="w-4 h-4" /></button>
               </div>
             </div>
-            <div className="px-6 pb-6">
-              {/* [수정] Desktop Editor에서도 Callback Ref 적용하여 일관성 유지 */}
+            {/* 스크롤 가능한 에디터 영역 */}
+            <div className="flex-1 overflow-y-auto p-6">
               <div ref={setEditorRef} contentEditable={true} suppressContentEditableWarning onInput={handleInput} className="contract-editor bg-white min-h-[800px] focus:outline-none shadow-sm" />
             </div>
           </div>
 
-          <div className="w-[20%] bg-white border-l border-gray-300 overflow-y-auto p-6">
+          {/* [수정 4] 우측 사이드바: h-full 적용으로 독립 스크롤 */}
+          <div className="w-[20%] h-full bg-white border-l border-gray-300 overflow-y-auto p-6">
             <h3 className="text-lg font-semibold text-[#3e5168] mb-6">텍스트 서식</h3>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">크기</label>
@@ -871,7 +869,6 @@ export default function App() {
             <TabsContent value="preview" className="flex-1 overflow-hidden relative mt-0 bg-gray-200">
                <div className="absolute inset-0 overflow-auto p-4 flex justify-center items-start">
                   <div className="w-fit">
-                    {/* [수정] Callback Ref 적용으로 에디터 Mount 시 내용 동기화 보장 */}
                     <div ref={setEditorRef} contentEditable={true} suppressContentEditableWarning onInput={handleInput} className="contract-editor bg-white min-h-[800px] shadow-lg origin-top scale-[0.8]" style={{ transformOrigin: 'top center' }} />
                   </div>
                </div>
