@@ -1,15 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow">
+    <title>Contract Creation System</title>
+    
+    <script>
 
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Contract Creation System</title>
-    </head>
+      const PASSWORD = "!kyobo220"; 
+      
+      const userPass = prompt("접근 암호를 입력해 주세요.");
+      
+      if (userPass !== PASSWORD) {
+        alert("접근 권한이 없습니다.");
+        // 화면을 아예 백지로 만들고 튕겨냅니다.
+        document.documentElement.style.display = 'none';
+        window.location.href = "about:blank";
+      }
+    </script>
+  </head>
 
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
-  
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
