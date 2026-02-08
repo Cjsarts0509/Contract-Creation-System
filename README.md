@@ -12,7 +12,7 @@
 ---
 
 ### 🐛 버그 리포트
-프로그램에 문제가 있나요? [여기에서 버그 리포트 접수]([https://docs.google.com/spreadsheets/d/1J8Z6sXplkjt0hXHyKArgv9Hle9Q4E8dvAMANlgPykU/edit?gid=0#gid=0](https://docs.google.com/spreadsheets/d/e/2PACX-1vRBLNfwVjrEDrtG2_WeczG6wmzWFEe49Wfo6pLa8s7uzhqirPxO72CkIYtl0LNQDERqDaRmewrD7LIo/pubhtml))를 부탁드립니다.
+프로그램에 문제가 있나요? [여기에서 버그 리포트 접수](https://docs.google.com/spreadsheets/d/e/2PACX-1vRBLNfwVjrEDrtG2_WeczG6wmzWFEe49Wfo6pLa8s7uzhqirPxO72CkIYtl0LNQDERqDaRmewrD7LIo/pubhtml)를 부탁드립니다.
 
 ---
 
