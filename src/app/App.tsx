@@ -566,11 +566,29 @@ export default function App() {
   // 4. 컴포넌트 렌더링
   // ----------------------------------------------------------------------
   return (
-    // [수정 1] h-screen, overflow-hidden으로 전체 화면 고정
-    <div className="h-screen w-full flex bg-gray-50 relative font-sans overflow-hidden">
+    // [수정] 인쇄 시 스타일 적용 (print:h-auto print:overflow-visible 등)
+    <div className="h-screen w-full flex bg-gray-50 relative font-sans overflow-hidden print:h-auto print:overflow-visible print:block print:bg-white">
+      
+      {/* [수정] 인쇄 전용 스타일: @page margin 20mm 15mm로 설정하여 모든 페이지에 여백 적용 */}
+      <style>{`
+        @media print {
+          @page { margin: 20mm 15mm; size: auto; }
+          body { margin: 0; background-color: white; }
+          .contract-page {
+            width: 100% !important; /* A4 너비에 맞춤 */
+            height: auto !important; /* 내용 길이에 따라 자동 확장 */
+            min-height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important; /* @page에서 여백을 처리하므로 여기선 제거 */
+            border: none !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+          }
+        }
+      `}</style>
        
       {showResetConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm print:hidden">
           <div className="bg-white rounded-lg shadow-xl p-6 w-[360px] text-center">
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4 mx-auto"><AlertTriangle className="w-6 h-6 text-red-600" /></div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">전체 초기화</h3>
@@ -584,7 +602,7 @@ export default function App() {
       )}
 
       {showSaveModal && !isMobile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm print:hidden">
           <div className="bg-white rounded-lg shadow-xl p-6 w-[400px]">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">저장 방식 선택</h3>
             <div className="space-y-3">
@@ -603,7 +621,7 @@ export default function App() {
       )}
 
       {warningModal.show && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm print:hidden">
           <div className="bg-white rounded-lg shadow-xl p-6 w-[320px] text-center">
             <h3 className="text-lg font-semibold mb-2 text-gray-900">입력 오류</h3>
             <p className="text-sm text-gray-500 mb-6">{warningModal.msg}</p>
@@ -616,8 +634,8 @@ export default function App() {
 
       {!isMobile && (
         <>
-          {/* [수정 2] 좌측 사이드바: h-full 적용으로 독립 스크롤 */}
-          <div className="w-[30%] h-full bg-white border-r border-gray-300 overflow-y-auto">
+          {/* [수정] 좌측 사이드바: 인쇄 시 숨김 */}
+          <div className="w-[30%] h-full bg-white border-r border-gray-300 overflow-y-auto print:hidden">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-[#5c7cfa]">
                 <h1 className="text-lg font-semibold text-[#3e5168]">계약서 작성 시스템</h1>
@@ -680,24 +698,24 @@ export default function App() {
             </div>
           </div>
 
-          {/* [수정 3] 중앙 영역: flex-col로 분리하여 헤더 고정, 바디만 스크롤 */}
-          <div className="w-[50%] h-full bg-gray-100 flex flex-col relative">
-            {/* 고정된 헤더 */}
-            <div className="px-6 py-4 flex justify-between items-center bg-gray-100 shrink-0 border-b border-gray-200 z-10">
+          {/* [수정] 중앙 영역: 인쇄 시 전체 화면 사용, absolute 제거하고 static으로 변경하여 페이지 흐름 따름 */}
+          <div className="w-[50%] h-full bg-gray-100 flex flex-col relative print:w-full print:static print:h-auto print:block">
+            {/* 고정된 헤더: 인쇄 시 숨김 */}
+            <div className="px-6 py-4 flex justify-between items-center bg-gray-100 shrink-0 border-b border-gray-200 z-10 print:hidden">
               <h3 className="text-lg font-semibold text-[#3e5168]">계약서 내용</h3>
               <div className="flex gap-2">
                 <button onMouseDown={(e) => e.preventDefault()} onClick={handleUndo} disabled={historyIndex <= 0} className="p-2 bg-white border rounded shadow-sm disabled:opacity-30"><Undo className="w-4 h-4" /></button>
                 <button onMouseDown={(e) => e.preventDefault()} onClick={handleRedo} disabled={historyIndex >= history.length - 1} className="p-2 bg-white border rounded shadow-sm disabled:opacity-30"><Redo className="w-4 h-4" /></button>
               </div>
             </div>
-            {/* 스크롤 가능한 에디터 영역 */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div ref={setEditorRef} contentEditable={true} suppressContentEditableWarning onInput={handleInput} className="contract-editor bg-white min-h-[800px] focus:outline-none shadow-sm" />
+            {/* 스크롤 가능한 에디터 영역: 인쇄 시 스크롤 해제 */}
+            <div className="flex-1 overflow-y-auto p-6 print:overflow-visible print:p-0 print:m-0 print:h-auto">
+              <div ref={setEditorRef} contentEditable={true} suppressContentEditableWarning onInput={handleInput} className="contract-editor bg-white min-h-[800px] focus:outline-none shadow-sm print:shadow-none print:min-h-0" />
             </div>
           </div>
 
-          {/* [수정 4] 우측 사이드바: h-full 적용으로 독립 스크롤 */}
-          <div className="w-[20%] h-full bg-white border-l border-gray-300 overflow-y-auto p-6">
+          {/* [수정] 우측 사이드바: 인쇄 시 숨김 */}
+          <div className="w-[20%] h-full bg-white border-l border-gray-300 overflow-y-auto p-6 print:hidden">
             <h3 className="text-lg font-semibold text-[#3e5168] mb-6">텍스트 서식</h3>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">크기</label>
@@ -803,7 +821,7 @@ export default function App() {
       )}
 
       {isMobile && (
-        <div className="w-full flex flex-col h-[100dvh]">
+        <div className="w-full flex flex-col h-[100dvh] print:hidden">
           <Tabs value={mobileTab} onValueChange={(v: string) => setMobileTab(v as 'input' | 'preview')} className="flex flex-col h-full">
             <div className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
                <h1 className="text-lg font-bold text-[#3e5168]">계약서 시스템</h1>
