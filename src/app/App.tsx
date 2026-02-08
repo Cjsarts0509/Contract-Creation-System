@@ -8,6 +8,8 @@ import {
   RotateCcw, Check, Save, RefreshCw, AlertTriangle, AlertCircle, Calendar, 
   ChevronLeft, ChevronRight, FileText, Image as ImageIcon, FileCode, X 
 } from 'lucide-react';
+import { useIsMobile } from './components/ui/use-mobile';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 
 // [중요] 스타일 파일 경로
 import '../styles/fonts.css'; 
@@ -50,6 +52,8 @@ const isRealDate = (dateStr: string) => {
 };
 
 export default function App() {
+  const isMobile = useIsMobile();
+
   // ----------------------------------------------------------------------
   // 1. 상태 관리
   // ----------------------------------------------------------------------
@@ -87,6 +91,11 @@ export default function App() {
   const [cellHeight, setCellHeight] = useState('');
   
   const savedSelectionRef = useRef<Range | null>(null);
+
+  // 모바일 탭 상태
+  const [mobileTab, setMobileTab] = useState<'input' | 'preview'>('input');
+  // 현재 에디터 내용 저장용 (모바일 탭 전환 시 유지)
+  const [currentEditorContent, setCurrentEditorContent] = useState<string>('');
 
   // ----------------------------------------------------------------------
   // 2. 비즈니스 로직
@@ -154,9 +163,15 @@ export default function App() {
     const days = [];
     for (let i = 0; i < firstDay; i++) days.push(null);
     for (let i = 1; i <= lastDate; i++) days.push(i);
+    
+    // 모바일 최적화 스타일
+    const modalClass = isMobile 
+      ? "bg-white rounded-lg shadow-2xl p-5 w-[90%] max-w-[360px]" 
+      : "bg-white rounded-lg shadow-2xl p-5 w-80";
+      
     return (
       <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
-        <div className="bg-white rounded-lg shadow-2xl p-5 w-80">
+        <div className={modalClass}>
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => setCurrentCalDate(new Date(y, m - 1))} className="p-1 hover:bg-gray-100 rounded"><ChevronLeft className="w-5 h-5"/></button>
             <span className="font-bold text-gray-700">{y}년 {m + 1}월</span>
@@ -180,10 +195,15 @@ export default function App() {
   const handleContractTypeSelect = (type: string) => {
     setContractType(type);
     setTradeInfo({}); 
+    // 비동기 상태 문제 해결: 상태가 아닌 전달받은 type과 현재 basicInfo    바로 사용
     const template = getContractTemplate(type, { ...basicInfo, tradePeriod: '', ...tradeInfo });
     if (editorRef.current) editorRef.current.innerHTML = template;
+    setCurrentEditorContent(template);
     setHistory([template]);
     setHistoryIndex(0);
+    
+    // 모바일에서는 양식 선택 시 자동으로 미리보기 탭으로 이동 (사용성 개선)
+    // if (isMobile) setMobileTab('preview'); // 사용자가 원할지 모르니 일단 주석 처리
   };
 
   const handleTradeInfoChange = (field: string, value: string, type?: string) => {
@@ -211,9 +231,11 @@ export default function App() {
   const confirmSystemReset = () => {
     setContractType('');
     handleReset();
+    const initialContent = '<div class="contract-page bg-white mx-auto shadow-sm border border-gray-200" style="width: 210mm; height: 297mm; padding: 25.4mm 19mm;"><p class="text-gray-400 text-center" style="margin-top: 120px;">매입처거래구분을 선택하면 계약서 양식이 표시됩니다.</p></div>';
     if (editorRef.current) {
-      editorRef.current.innerHTML = '<div class="contract-page bg-white mx-auto shadow-sm border border-gray-200" style="width: 210mm; height: 297mm; padding: 25.4mm 19mm;"><p class="text-gray-400 text-center" style="margin-top: 120px;">매입처거래구분을 선택하면 계약서 양식이 표시됩니다.</p></div>';
+      editorRef.current.innerHTML = initialContent;
     }
+    setCurrentEditorContent(initialContent);
     setHistory([]); setHistoryIndex(-1); setShowResetConfirm(false);
   };
 
@@ -232,7 +254,13 @@ export default function App() {
     const data: ContractData = { ...basicInfo, tradePeriod: period, ...tradeInfo };
     const updated = getContractTemplate(contractType, data);
     if (editorRef.current) editorRef.current.innerHTML = updated;
+    setCurrentEditorContent(updated);
     addToHistory(updated);
+    
+    // 모바일에서는 적용 후 미리보기 탭으로 이동
+    if (isMobile) {
+      setMobileTab('preview');
+    }
   };
 
   // ----------------------------------------------------------------------
@@ -251,7 +279,9 @@ export default function App() {
     if (historyIndex > 0 && editorRef.current) {
       isRestoringRef.current = true;
       const newIndex = historyIndex - 1;
-      editorRef.current.innerHTML = history[newIndex];
+      const content = history[newIndex];
+      editorRef.current.innerHTML = content;
+      setCurrentEditorContent(content);
       setHistoryIndex(newIndex);
       setTimeout(() => { isRestoringRef.current = false; }, 100);
     }
@@ -261,7 +291,9 @@ export default function App() {
     if (historyIndex < history.length - 1 && editorRef.current) {
       isRestoringRef.current = true;
       const newIndex = historyIndex + 1;
-      editorRef.current.innerHTML = history[newIndex];
+      const content = history[newIndex];
+      editorRef.current.innerHTML = content;
+      setCurrentEditorContent(content);
       setHistoryIndex(newIndex);
       setTimeout(() => { isRestoringRef.current = false; }, 100);
     }
@@ -269,11 +301,21 @@ export default function App() {
 
   const handleInput = () => {
     if (isRestoringRef.current || !editorRef.current) return;
+    const content = editorRef.current.innerHTML;
+    setCurrentEditorContent(content);
+    
     if (inputTimeoutRef.current) clearTimeout(inputTimeoutRef.current);
     inputTimeoutRef.current = setTimeout(() => {
-      if (editorRef.current) addToHistory(editorRef.current.innerHTML);
+      addToHistory(content);
     }, 1000);
   };
+  
+  // 모바일 탭 전환 시 에디터 내용 복구
+  useEffect(() => {
+    if (isMobile && mobileTab === 'preview' && editorRef.current && currentEditorContent) {
+       editorRef.current.innerHTML = currentEditorContent;
+    }
+  }, [mobileTab, isMobile]);
 
   const handleSelectionChange = () => {
     const selection = window.getSelection();
@@ -300,15 +342,15 @@ export default function App() {
     }
   };
 
-  const applyCommand = (cmd: string, arg?: string) => { document.execCommand(cmd, false, arg); if(editorRef.current) addToHistory(editorRef.current.innerHTML); };
+  const applyCommand = (cmd: string, arg?: string) => { document.execCommand(cmd, false, arg); if(editorRef.current) { addToHistory(editorRef.current.innerHTML); setCurrentEditorContent(editorRef.current.innerHTML); } };
   const applyFontColor = (color: string) => { setFontColor(color); applyCommand('foreColor', color); };
-  const applyCellBgColor = (color: string) => { if(selectedCell) { selectedCell.style.backgroundColor = color; setCellBgColor(color); if(editorRef.current) addToHistory(editorRef.current.innerHTML); }};
+  const applyCellBgColor = (color: string) => { if(selectedCell) { selectedCell.style.backgroundColor = color; setCellBgColor(color); if(editorRef.current) { addToHistory(editorRef.current.innerHTML); setCurrentEditorContent(editorRef.current.innerHTML); } }};
   const applyFontStyle = (style: string) => { setFontStyle(style); applyCommand(style === 'bold' ? 'bold' : 'removeFormat'); };
   const applyTextAlign = (align: string) => { setTextAlign(align); applyCommand(`justify${align.charAt(0).toUpperCase() + align.slice(1)}`); };
   
   const changeFontSize = (delta: number) => {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) { alert('텍스트를 먼저 선택해주세요.'); return; }
+    if (!selection || selection.rangeCount === 0) { alert('텍스트를 먼저    택해주세요.'); return; }
     
     const range = selection.getRangeAt(0);
     if (range.collapsed) return;
@@ -322,6 +364,7 @@ export default function App() {
     const newSize = Math.max(8, Math.min(72, currentSize + delta));
     setFontSize(newSize.toString());
 
+    // (기존 폰트 크기 변경 로직 생략 없이 그대로 유지)
     const textNodes: Text[] = [];
     const walker = document.createTreeWalker(
         range.commonAncestorContainer, NodeFilter.SHOW_TEXT, 
@@ -368,7 +411,10 @@ export default function App() {
        newRange.setEnd(lastProcessedNode, (lastProcessedNode as Text).length);
        selection.addRange(newRange);
     }
-    if (editorRef.current) addToHistory(editorRef.current.innerHTML);
+    if (editorRef.current) {
+        addToHistory(editorRef.current.innerHTML);
+        setCurrentEditorContent(editorRef.current.innerHTML);
+    }
   };
   
   const insertTable = () => applyCommand('insertHTML', `<table class="contract-table editable-table" style="width:100%; border-collapse:collapse; margin:15px 0;"><tbody><tr><td style="border:1px solid #000; padding:8px;">Cell</td><td style="border:1px solid #000; padding:8px;">Cell</td></tr><tr><td style="border:1px solid #000; padding:8px;">Cell</td><td style="border:1px solid #000; padding:8px;">Cell</td></tr></tbody></table><br/>`);
@@ -415,7 +461,8 @@ export default function App() {
       Object.assign(container.style, { 
         position: 'fixed', top: '0', left: '-10000px', zIndex: '-1000',
         fontFamily: 'sans-serif', lineHeight: '1.6',
-        color: '#000000', backgroundColor: '#ffffff'
+        color: '#000000', backgroundColor: '#ffffff',
+        width: '210mm' // 모바일에서도 너비 강제
       });
       
       // [핵심] oklch 함수가 호출되지 않도록 CSS 변수들을 고정값(Hex)으로 덮어씀
@@ -559,7 +606,15 @@ export default function App() {
         const pdf = new jsPDF('p', 'mm', 'a4');
         for (let i = 0; i < pages.length; i++) {
           const page = pages[i];
-          const canvas = await html2canvas(page, { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: page.offsetWidth, height: page.offsetHeight });
+          // 모바일 메모리 최적화를 위해 scale 조정 가능 (현재는 2 유지)
+          // 텍스트 겹침 방지를 위해 windowWidth 등 옵션 추가 고려 가능하나, width 지정으로 충분할 것으로 예상
+          const canvas = await html2canvas(page, { 
+            scale: 2, 
+            useCORS: true, 
+            backgroundColor: '#ffffff', 
+            width: page.offsetWidth, 
+            height: page.offsetHeight 
+          });
           if (i > 0) pdf.addPage();
           pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
         }
@@ -576,7 +631,20 @@ export default function App() {
     }
   };
 
-  const handleSaveClick = () => { if (!editorRef.current?.innerHTML || editorRef.current.innerHTML.includes('매입처거래구분을 선택하면')) { alert('내용이 없습니다.'); return; } setShowSaveModal(true); };
+  const handleSaveClick = () => { 
+    if (!editorRef.current?.innerHTML || editorRef.current.innerHTML.includes('매입처거래구분을 선택하면')) { alert('내용이 없습니다.'); return; }
+    
+    // 모바일에서는 바로 PDF 저장 (옵션 모달 생략, 인쇄 삭제)
+    if (isMobile) {
+      if (confirm('PDF로 저장하시겠습니까?')) {
+        executeSave('pdf');
+      }
+      return;
+    }
+    
+    setShowSaveModal(true); 
+  };
+  
   const handlePrint = () => { if (!editorRef.current?.innerHTML || editorRef.current.innerHTML.includes('매입처거래구분을 선택하면')) { alert('내용이 없습니다.'); return; } window.print(); };
 
   useEffect(() => {
@@ -594,7 +662,63 @@ export default function App() {
   });
 
   // ----------------------------------------------------------------------
-  // 4. 화면 렌더링
+  // 4. 컴포넌트 렌더링 (입력 폼 등) - 재사용을 위해 변수로 분리
+  // ----------------------------------------------------------------------
+  const ContractTypeButtons = (
+    <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 gap-2'}`}>
+      {['direct', 'directPB', 'specific', 'specificDelivery', 'contractETC1', 'contractETC2', 'contractETC3', 'contractETC4', 'contractETC5', 'contractETC6'].map((type, idx) => (
+        <button key={type} onClick={() => handleContractTypeSelect(type)} className={`px-4 ${isMobile ? 'py-3 text-base' : 'py-2 text-sm'} rounded transition-colors ${contractType === type ? 'bg-[#5c7cfa] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+          {['직매입', '직매입(PB)', '특정매입', '특정매입(배송대행)', '???', '???', '???', '???', '???', '???'][idx]}
+        </button>
+      ))}
+    </div>
+  );
+
+  const BasicInfoInputs = (
+    <div className="space-y-2">
+      {[{ label: '매입처명', key: 'supplierName' }, { label: '대표이사', key: 'ceo' }, { label: '사업장주소', key: 'address' }].map((item) => (
+        <div key={item.key} className={`grid ${isMobile ? 'grid-cols-1 gap-1' : 'grid-cols-[100px_1fr] gap-2 items-center'}`}>
+          <label className={`bg-gray-50 px-3 py-2 text-sm text-gray-700 ${isMobile ? 'font-semibold' : ''}`}>{item.label}</label>
+          <input type="text" value={basicInfo[item.key as keyof typeof basicInfo]} onChange={(e) => handleBasicInfoChange(item.key, e.target.value)} className={`border border-gray-300 px-3 ${isMobile ? 'py-3' : 'py-2'} rounded text-sm focus:outline-none focus:border-[#5c7cfa]`} placeholder={`${item.label} 입력`} />
+        </div>
+      ))}
+      {[{ label: '계약일자', key: 'contractDate' }, { label: '거래시작일자', key: 'tradeStartDate' }, { label: '거래종료일자', key: 'tradeEndDate' }].map((item) => (
+        <div key={item.key} className={`grid ${isMobile ? 'grid-cols-1 gap-1' : 'grid-cols-[100px_1fr] gap-2 items-center'}`}>
+          <label className={`bg-gray-50 px-3 py-2 text-sm text-gray-700 ${isMobile ? 'font-semibold' : ''}`}>{item.label}</label>
+          <div className="relative flex items-center">
+            <input type="text" value={basicInfo[item.key as keyof typeof basicInfo]} placeholder="YYYY-MM-DD" maxLength={10} onChange={(e) => handleDateChange(item.key as keyof typeof basicInfo, e.target.value)} onBlur={() => handleDateBlur(item.key as keyof typeof basicInfo)} className={`w-full border border-gray-300 px-3 ${isMobile ? 'py-3' : 'py-2'} rounded text-sm focus:outline-none focus:border-[#5c7cfa] pr-10`} />
+            <button onClick={() => setCalendarTarget(item.key as keyof typeof basicInfo)} className="absolute right-2 p-2 text-gray-400 hover:text-[#5c7cfa] transition-colors"><Calendar className="w-5 h-5"/></button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const TradeInfoInputs = (
+    <div className="space-y-2">
+      {contractType && CONTRACT_CONFIG[contractType] ? (
+        CONTRACT_CONFIG[contractType].map((field) => (
+          <div key={field.key} className={`grid ${isMobile ? 'grid-cols-1 gap-1' : 'grid-cols-[120px_1fr] gap-2 items-center'}`}>
+            <label className={`bg-gray-50 px-3 py-2 text-sm text-gray-700 ${isMobile ? 'font-semibold' : ''}`}>{field.label}</label>
+            <input type="text" value={tradeInfo[field.key] || ''} onChange={(e) => handleTradeInfoChange(field.key, e.target.value, field.type)} className={`border border-gray-300 px-3 ${isMobile ? 'py-3' : 'py-2'} rounded text-sm focus:outline-none focus:border-[#5c7cfa]`} placeholder={field.placeholder} />
+          </div>
+        ))
+      ) : (<p className="text-sm text-gray-500 text-center py-4">계약서 양식을 선택해주세요.</p>)}
+    </div>
+  );
+
+  const ActionButtons = (
+    <section className="flex flex-wrap gap-2">
+      <button onClick={handleReset} className="flex-1 bg-gray-500 text-white px-3 py-2.5 rounded hover:bg-gray-600 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><RotateCcw className="w-4 h-4" />초기화</button>
+      <button onClick={handleApply} className="flex-1 bg-[#5c7cfa] text-white px-3 py-2.5 rounded hover:bg-[#4c6cdf] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Check className="w-4 h-4" />적용</button>
+      <button onClick={handleSaveClick} className="flex-1 bg-[#51cf66] text-white px-3 py-2.5 rounded hover:bg-[#40c057] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Save className="w-4 h-4" />저장</button>
+      {!isMobile && <button onClick={handlePrint} className="flex-1 bg-[#EF5350] text-white px-3 py-2.5 rounded hover:bg-[#E53935] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Printer className="w-4 h-4" />인쇄</button>}
+      <button onClick={() => setShowResetConfirm(true)} className="flex-1 bg-red-600 text-white px-3 py-2.5 rounded hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><RefreshCw className="w-4 h-4" /><span className="leading-none text-center">전체<br/>초기화</span></button>
+    </section>
+  );
+
+  // ----------------------------------------------------------------------
+  // 5. 화면 렌더링
   // ----------------------------------------------------------------------
   return (
     <div className="size-full flex bg-gray-50 relative font-sans">
@@ -614,8 +738,8 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. 저장 방식 선택 모달 */}
-      {showSaveModal && (
+      {/* 2. 저장 방식 선택 모달 (데스크탑만) */}
+      {showSaveModal && !isMobile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-lg shadow-xl p-6 w-[400px]">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">저장 방식 선택</h3>
@@ -652,109 +776,128 @@ export default function App() {
 
       {calendarTarget && renderCalendar()}
 
-      {/* --- [좌측: 입력 패널] --- */}
-      <div className="w-[30%] bg-white border-r border-gray-300 overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-[#5c7cfa]">
-            <h1 className="text-lg font-semibold text-[#3e5168]">계약서 작성 시스템</h1>
+      {/* 데스크탑 레이아웃 */}
+      {!isMobile && (
+        <>
+          {/* --- [좌측: 입력 패널] --- */}
+          <div className="w-[30%] bg-white border-r border-gray-300 overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-[#5c7cfa]">
+                <h1 className="text-lg font-semibold text-[#3e5168]">계약서 작성 시스템</h1>
+              </div>
+              <section className="mb-6">
+                <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">계약서 양식</h4>
+                {ContractTypeButtons}
+              </section>
+              <section className="mb-6">
+                <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">매입처기본정보</h4>
+                {BasicInfoInputs}
+              </section>
+              <section className="mb-6">
+                <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">매입처거래정보</h4>
+                {TradeInfoInputs}
+              </section>
+              {ActionButtons}
+            </div>
           </div>
-          <section className="mb-6">
-            <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">계약서 양식</h4>
-            <div className="grid grid-cols-2 gap-2">
-              {['direct', 'directPB', 'specific', 'specificDelivery', 'contractETC1', 'contractETC2', 'contractETC3', 'contractETC4', 'contractETC5', 'contractETC6'].map((type, idx) => (
-                <button key={type} onClick={() => handleContractTypeSelect(type)} className={`px-4 py-2 text-sm rounded transition-colors ${contractType === type ? 'bg-[#5c7cfa] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-                  {['직매입', '직매입(PB)', '특정매입', '특정매입(배송대행)', '???', '???', '???', '???', '???', '???'][idx]}
-                </button>
-              ))}
-            </div>
-          </section>
-          <section className="mb-6">
-            <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">매입처기본정보</h4>
-            <div className="space-y-2">
-              {[{ label: '매입처명', key: 'supplierName' }, { label: '대표이사', key: 'ceo' }, { label: '사업장주소', key: 'address' }].map((item) => (
-                <div key={item.key} className="grid grid-cols-[100px_1fr] gap-2 items-center">
-                  <label className="bg-gray-50 px-3 py-2 text-sm text-gray-700">{item.label}</label>
-                  <input type="text" value={basicInfo[item.key as keyof typeof basicInfo]} onChange={(e) => handleBasicInfoChange(item.key, e.target.value)} className="border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:border-[#5c7cfa]" placeholder={`${item.label} 입력`} />
-                </div>
-              ))}
-              {[{ label: '계약일자', key: 'contractDate' }, { label: '거래시작일자', key: 'tradeStartDate' }, { label: '거래종료일자', key: 'tradeEndDate' }].map((item) => (
-                <div key={item.key} className="grid grid-cols-[100px_1fr] gap-2 items-center">
-                  <label className="bg-gray-50 px-3 py-2 text-sm text-gray-700">{item.label}</label>
-                  <div className="relative flex items-center">
-                    <input type="text" value={basicInfo[item.key as keyof typeof basicInfo]} placeholder="YYYY-MM-DD" maxLength={10} onChange={(e) => handleDateChange(item.key as keyof typeof basicInfo, e.target.value)} onBlur={() => handleDateBlur(item.key as keyof typeof basicInfo)} className="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:border-[#5c7cfa] pr-10" />
-                    <button onClick={() => setCalendarTarget(item.key as keyof typeof basicInfo)} className="absolute right-2 p-1 text-gray-400 hover:text-[#5c7cfa] transition-colors"><Calendar className="w-4 h-4"/></button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-          <section className="mb-6">
-            <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">매입처거래정보</h4>
-            <div className="space-y-2">
-              {contractType && CONTRACT_CONFIG[contractType] ? (
-                CONTRACT_CONFIG[contractType].map((field) => (
-                  <div key={field.key} className="grid grid-cols-[120px_1fr] gap-2 items-center">
-                    <label className="bg-gray-50 px-3 py-2 text-sm text-gray-700">{field.label}</label>
-                    <input type="text" value={tradeInfo[field.key] || ''} onChange={(e) => handleTradeInfoChange(field.key, e.target.value, field.type)} className="border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:border-[#5c7cfa]" placeholder={field.placeholder} />
-                  </div>
-                ))
-              ) : (<p className="text-sm text-gray-500 text-center py-4">계약서 양식을 선택해주세요.</p>)}
-            </div>
-          </section>
-          <section className="flex flex-wrap gap-2">
-            <button onClick={handleReset} className="flex-1 bg-gray-500 text-white px-3 py-2.5 rounded hover:bg-gray-600 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><RotateCcw className="w-4 h-4" />초기화</button>
-            <button onClick={handleApply} className="flex-1 bg-[#5c7cfa] text-white px-3 py-2.5 rounded hover:bg-[#4c6cdf] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Check className="w-4 h-4" />적용</button>
-            <button onClick={handleSaveClick} className="flex-1 bg-[#51cf66] text-white px-3 py-2.5 rounded hover:bg-[#40c057] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Save className="w-4 h-4" />저장</button>
-            <button onClick={handlePrint} className="flex-1 bg-[#EF5350] text-white px-3 py-2.5 rounded hover:bg-[#E53935] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Printer className="w-4 h-4" />인쇄</button>
-            <button onClick={() => setShowResetConfirm(true)} className="flex-1 bg-red-600 text-white px-3 py-2.5 rounded hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><RefreshCw className="w-4 h-4" /><span className="leading-none text-center">전체<br/>초기화</span></button>
-          </section>
-        </div>
-      </div>
 
-      {/* --- [중앙: 에디터 패널] --- */}
-      <div className="w-[50%] bg-gray-100 overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-gray-100 p-6 pb-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-[#3e5168]">계약서 내용</h3>
-            <div className="flex gap-2">
-              <button onClick={handleUndo} disabled={historyIndex <= 0} className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-50 shadow-sm"><Undo className="w-4 h-4" /></button>
-              <button onClick={handleRedo} disabled={historyIndex >= history.length - 1} className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-50 shadow-sm"><Redo className="w-4 h-4" /></button>
+          {/* --- [중앙: 에디터 패널] --- */}
+          <div className="w-[50%] bg-gray-100 overflow-y-auto">
+            <div className="sticky top-0 z-10 bg-gray-100 p-6 pb-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-[#3e5168]">계약서 내용</h3>
+                <div className="flex gap-2">
+                  <button onClick={handleUndo} disabled={historyIndex <= 0} className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-50 shadow-sm"><Undo className="w-4 h-4" /></button>
+                  <button onClick={handleRedo} disabled={historyIndex >= history.length - 1} className="p-2 bg-white border border-gray-300 rounded hover:bg-gray-50 shadow-sm"><Redo className="w-4 h-4" /></button>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 pb-6">
+              <div ref={editorRef} contentEditable={true} suppressContentEditableWarning onInput={handleInput} className="contract-editor bg-white min-h-[800px] focus:outline-none shadow-sm" dangerouslySetInnerHTML={{ __html: '<div class="contract-page bg-white mx-auto shadow-sm border border-gray-200" style="width: 210mm; height: 297mm; padding: 25.4mm 19mm;"><p class="text-gray-400 text-center" style="margin-top: 120px;">매입처거래구분을 선택하면 계약서 양식이 표시됩니다.</p></div>' }} />
             </div>
           </div>
-        </div>
-        <div className="px-6 pb-6">
-          <div ref={editorRef} contentEditable={true} suppressContentEditableWarning onInput={handleInput} className="contract-editor bg-white min-h-[800px] focus:outline-none shadow-sm" dangerouslySetInnerHTML={{ __html: '<div class="contract-page bg-white mx-auto shadow-sm border border-gray-200" style="width: 210mm; height: 297mm; padding: 25.4mm 19mm;"><p class="text-gray-400 text-center" style="margin-top: 120px;">매입처거래구분을 선택하면 계약서 양식이 표시됩니다.</p></div>' }} />
-        </div>
-      </div>
 
-      {/* --- [우측: 서식 패널] --- */}
-      <div className="w-[20%] bg-white border-l border-gray-300 overflow-y-auto p-6">
-        <h3 className="text-lg font-semibold text-[#3e5168] mb-6">서식</h3>
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">폰트 크기</label>
-          <div className="flex gap-2">
-            <input type="number" value={fontSize} readOnly className="flex-1 border border-gray-300 px-3 py-2 rounded text-sm bg-gray-50" placeholder="13" />
-            <button onClick={() => changeFontSize(-1)} className="px-3 py-2 bg-[#5c7cfa] text-white rounded hover:bg-[#4c6cdf] text-sm w-10">-</button>
-            <button onClick={() => changeFontSize(1)} className="px-3 py-2 bg-[#5c7cfa] text-white rounded hover:bg-[#4c6cdf] text-sm w-10">+</button>
-          </div>
-        </div>
-        <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-2">폰트 스타일</label><div className="grid grid-cols-2 gap-2">{[{ value: 'normal', label: '보통' }, { value: 'bold', label: '굵게' }].map(({ value, label }) => (<button key={value} onClick={() => applyFontStyle(value)} className={`px-3 py-2 border rounded text-sm ${fontStyle === value ? 'bg-[#5c7cfa] text-white border-[#5c7cfa]' : 'bg-white text-gray-700 border-gray-300'}`} style={{ fontWeight: value === 'bold' ? '700' : 'normal' }}>{label}</button>))}</div></div>
-        <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-2">텍스트 색상</label><div className="grid grid-cols-6 gap-1.5">{FONT_COLORS.map(color => (<button key={color} onClick={() => applyFontColor(color)} className="w-full aspect-square rounded border-2 hover:scale-110 transition-transform" style={{ backgroundColor: color, borderColor: fontColor === color ? '#5c7cfa' : '#d1d5db' }} title={color} />))}</div></div>
-        <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-2">정렬</label><div className="grid grid-cols-3 gap-2">{[{ value: 'left', label: '좌측' }, { value: 'center', label: '가운데' }, { value: 'right', label: '우측' }].map(({ value, label }) => (<button key={value} onClick={() => applyTextAlign(value)} className={`px-3 py-2 border rounded text-sm ${textAlign === value ? 'bg-[#5c7cfa] text-white border-[#5c7cfa]' : 'bg-white text-gray-700 border-gray-300'}`}>{label}</button>))}</div></div>
-        <div className="mb-6"><button onClick={insertTable} className="w-full bg-[#5c7cfa] text-white px-4 py-2 rounded hover:bg-[#4c6cdf] transition-colors text-sm font-medium">표 삽입</button></div>
-        {selectedTable && (
-          <div className="mb-6 pt-6 border-t border-gray-200">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">표 편집</h4>
-            <div className="grid grid-cols-2 gap-2 border-t pt-4">
-              <button onClick={addTableRow} className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 text-sm">+ 행</button>
-              <button onClick={removeTableRow} className="px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 text-sm">- 행</button>
-              <button onClick={addTableColumn} className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 text-sm">+ 열</button>
-              <button onClick={removeTableColumn} className="px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 text-sm">- 열</button>
+          {/* --- [우측: 서식 패널] --- */}
+          <div className="w-[20%] bg-white border-l border-gray-300 overflow-y-auto p-6">
+            <h3 className="text-lg font-semibold text-[#3e5168] mb-6">서식</h3>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">폰트 크기</label>
+              <div className="flex gap-2">
+                <input type="number" value={fontSize} readOnly className="flex-1 border border-gray-300 px-3 py-2 rounded text-sm bg-gray-50" placeholder="13" />
+                <button onClick={() => changeFontSize(-1)} className="px-3 py-2 bg-[#5c7cfa] text-white rounded hover:bg-[#4c6cdf] text-sm w-10">-</button>
+                <button onClick={() => changeFontSize(1)} className="px-3 py-2 bg-[#5c7cfa] text-white rounded hover:bg-[#4c6cdf] text-sm w-10">+</button>
+              </div>
             </div>
-            {selectedCell && (<div className="mt-6 pt-4 border-t border-gray-200"><label className="block text-sm font-medium text-gray-700 mb-2">셀 배경색</label><div className="grid grid-cols-6 gap-1.5">{FONT_COLORS.map(color => (<button key={color} onClick={() => applyCellBgColor(color)} className="w-full aspect-square rounded border-2 hover:scale-110 transition-transform" style={{ backgroundColor: color, borderColor: cellBgColor === color ? '#5c7cfa' : '#d1d5db' }} title={color} />))}</div></div>)}
+            <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-2">폰트 스타일</label><div className="grid grid-cols-2 gap-2">{[{ value: 'normal', label: '보통' }, { value: 'bold', label: '굵게' }].map(({ value, label }) => (<button key={value} onClick={() => applyFontStyle(value)} className={`px-3 py-2 border rounded text-sm ${fontStyle === value ? 'bg-[#5c7cfa] text-white border-[#5c7cfa]' : 'bg-white text-gray-700 border-gray-300'}`} style={{ fontWeight: value === 'bold' ? '700' : 'normal' }}>{label}</button>))}</div></div>
+            <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-2">텍스트 색상</label><div className="grid grid-cols-6 gap-1.5">{FONT_COLORS.map(color => (<button key={color} onClick={() => applyFontColor(color)} className="w-full aspect-square rounded border-2 hover:scale-110 transition-transform" style={{ backgroundColor: color, borderColor: fontColor === color ? '#5c7cfa' : '#d1d5db' }} title={color} />))}</div></div>
+            <div className="mb-6"><label className="block text-sm font-medium text-gray-700 mb-2">정렬</label><div className="grid grid-cols-3 gap-2">{[{ value: 'left', label: '좌측' }, { value: 'center', label: '가운데' }, { value: 'right', label: '우측' }].map(({ value, label }) => (<button key={value} onClick={() => applyTextAlign(value)} className={`px-3 py-2 border rounded text-sm ${textAlign === value ? 'bg-[#5c7cfa] text-white border-[#5c7cfa]' : 'bg-white text-gray-700 border-gray-300'}`}>{label}</button>))}</div></div>
+            <div className="mb-6"><button onClick={insertTable} className="w-full bg-[#5c7cfa] text-white px-4 py-2 rounded hover:bg-[#4c6cdf] transition-colors text-sm font-medium">표 삽입</button></div>
+            {selectedTable && (
+              <div className="mb-6 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">표 편집</h4>
+                <div className="grid grid-cols-2 gap-2 border-t pt-4">
+                  <button onClick={addTableRow} className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 text-sm">+ 행</button>
+                  <button onClick={removeTableRow} className="px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 text-sm">- 행</button>
+                  <button onClick={addTableColumn} className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 text-sm">+ 열</button>
+                  <button onClick={removeTableColumn} className="px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 text-sm">- 열</button>
+                </div>
+                {selectedCell && (<div className="mt-6 pt-4 border-t border-gray-200"><label className="block text-sm font-medium text-gray-700 mb-2">셀 배경색</label><div className="grid grid-cols-6 gap-1.5">{FONT_COLORS.map(color => (<button key={color} onClick={() => applyCellBgColor(color)} className="w-full aspect-square rounded border-2 hover:scale-110 transition-transform" style={{ backgroundColor: color, borderColor: cellBgColor === color ? '#5c7cfa' : '#d1d5db' }} title={color} />))}</div></div>)}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+      {/* 모바일 레이아웃 */}
+      {isMobile && (
+        <div className="w-full flex flex-col h-[100dvh]">
+          <Tabs value={mobileTab} onValueChange={(v: string) => setMobileTab(v as 'input' | 'preview')} className="flex flex-col h-full">
+            <div className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
+               <h1 className="text-lg font-bold text-[#3e5168]">계약서 시스템</h1>
+               <TabsList className="grid w-40 grid-cols-2">
+                <TabsTrigger value="input">입력</TabsTrigger>
+                <TabsTrigger value="preview">미리보기</TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <TabsContent value="input" className="flex-1 overflow-y-auto p-4 bg-gray-50 mt-0">
+              <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <h4 className="text-lg font-bold mb-4 border-b pb-2 text-[#5c7cfa]">계약서 양식</h4>
+                {ContractTypeButtons}
+              </section>
+              <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <h4 className="text-lg font-bold mb-4 border-b pb-2 text-[#5c7cfa]">기본 정보</h4>
+                {BasicInfoInputs}
+              </section>
+              <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <h4 className="text-lg font-bold mb-4 border-b pb-2 text-[#5c7cfa]">거래 정보</h4>
+                {TradeInfoInputs}
+              </section>
+              <div className="h-20"></div> {/* 하단 버튼 공간 확보 */}
+              
+              {/* 하단 고정 버튼 */}
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-2 z-40">
+                 {ActionButtons}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="preview" className="flex-1 overflow-hidden relative mt-0 bg-gray-200">
+               <div className="absolute inset-0 overflow-auto p-4 flex justify-center items-start">
+                  <div className="w-fit">
+                    <div ref={editorRef} contentEditable={true} suppressContentEditableWarning onInput={handleInput} className="contract-editor bg-white min-h-[800px] shadow-lg origin-top scale-[0.8] md:scale-100" style={{ transformOrigin: 'top center' }} dangerouslySetInnerHTML={{ __html: currentEditorContent || '<div class="contract-page bg-white mx-auto shadow-sm border border-gray-200" style="width: 210mm; height: 297mm; padding: 25.4mm 19mm;"><p class="text-gray-400 text-center" style="margin-top: 120px;">매입처거래구분을 선택하면 계약서 양식이 표시됩니다.</p></div>' }} />
+                  </div>
+               </div>
+               
+               {/* 플로팅 액션 버튼 (FAB) */}
+               <div className="fixed bottom-6 right-6 flex gap-3 z-50">
+                  <button onClick={handleUndo} disabled={historyIndex <= 0} className="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-gray-700 active:bg-gray-100"><Undo className="w-6 h-6"/></button>
+                  <button onClick={handleRedo} disabled={historyIndex >= history.length - 1} className="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-gray-700 active:bg-gray-100"><Redo className="w-6 h-6"/></button>
+                  <button onClick={handleSaveClick} className="w-14 h-14 rounded-full bg-[#51cf66] shadow-lg flex items-center justify-center text-white active:bg-[#40c057]"><Save className="w-7 h-7"/></button>
+               </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
     </div>
   );
 }
