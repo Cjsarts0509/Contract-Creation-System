@@ -1,0 +1,417 @@
+/* fonts.css 수정본 */
+
+
+
+/* 계약서 페이지 스타일 */
+
+.contract-page {
+
+  width: 210mm;
+
+  /* height: 297mm;  <-- 고정 높이 제거 (내용이 넘치면 잘리는 원인) */
+
+  min-height: 297mm; /* 최소 A4 한 장 높이 유지 */
+
+  height: auto !important; /* 내용에 따라 자동으로 늘어남 */
+
+  
+
+  padding: 20mm 15mm; /* 여백을 조금 더 넉넉하게 조정 (기존 15mm 10mm) */
+
+  
+
+  /* [중요] oklch 변수 차단 및 색상 강제 지정 */
+
+  background-color: #ffffff !important;
+
+  color: #000000 !important;
+
+  
+
+  /* [중요] 혹시 모를 변수 참조를 막기 위해 변수 재정의 */
+
+  --foreground: #000000;
+
+  --background: #ffffff;
+
+  --primary: #000000;
+
+  --muted: #f0f0f0;
+
+  --border: #dddddd;
+
+  
+
+  margin: 0 auto 30px auto;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  box-sizing: border-box;
+
+  overflow: visible; /* 내용이 넘쳐도 보이도록 설정 */
+
+}
+
+
+
+/* 계약서 에디터 */
+
+.contract-editor {
+
+  min-height: 800px;
+
+}
+
+
+
+.contract-editor:focus {
+
+  outline: none;
+
+}
+
+
+
+/* 표 스타일 */
+
+.contract-table {
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+  margin: 15px 0;
+
+  font-size: 12px;
+
+  page-break-inside: auto; /* 표 내부에서 페이지 나눔 허용 */
+
+}
+
+
+
+.contract-table th,
+
+.contract-table td {
+
+  border: 1px solid #000;
+
+  padding: 8px 12px;
+
+  text-align: center;
+
+}
+
+
+
+.contract-table th {
+
+  background-color: #f0f0f0;
+
+  font-weight: bold;
+
+}
+
+
+
+/* 표의 행(tr)이 페이지 끝에 걸칠 때 쪼개지지 않도록 설정 */
+
+.contract-table tr {
+
+  page-break-inside: avoid;
+
+  page-break-after: auto;
+
+}
+
+
+
+/* 편집 가능한 표 */
+
+.editable-table {
+
+  cursor: pointer;
+
+  position: relative;
+
+}
+
+
+
+.editable-table:hover {
+
+  box-shadow: 0 0 0 2px #5c7cfa;
+
+}
+
+
+
+.editable-table td {
+
+  min-width: 50px;
+
+  min-height: 30px;
+
+}
+
+
+
+.editable-table td:focus {
+
+  outline: 2px solid #5c7cfa;
+
+  outline-offset: -2px;
+
+}
+
+
+
+/* 서명란 스타일 */
+
+.signature-section {
+
+  margin-top: 50px;
+
+  page-break-inside: avoid; /* 서명란이 페이지 중간에 잘리지 않도록 설정 */
+
+}
+
+
+
+.signature-row {
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 40px;
+
+  margin-bottom: 15px;
+
+  font-size: 12px;
+
+}
+
+
+
+.signature-party {
+
+  text-align: center;
+
+}
+
+
+
+.signature-party-title {
+
+  font-weight: bold;
+
+  margin-bottom: 20px;
+
+}
+
+
+
+.signature-field {
+
+  margin-bottom: 10px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 20px;
+
+}
+
+
+
+.signature-label {
+
+  min-width: 80px;
+
+  text-align: left;
+
+}
+
+
+
+/* 폰트스타일1 : 제목 (18px, 굵게, 가운데) */
+
+.style-title {
+
+  font-size: 18px;
+
+  font-weight: bold;
+
+  text-align: center;
+
+  margin-bottom: 40px; /* 제목 아래 여백 조정 */
+
+}
+
+
+
+/* 폰트스타일2 : 부제목 (13px, 굵게, 왼쪽) */
+
+.style-subtitle {
+
+  font-size: 13px;
+
+  font-weight: bold;
+
+  text-align: left;
+
+  margin-top: 25px; /* 조항 사이 간격 확보 */
+
+  margin-bottom: 10px;
+
+}
+
+
+
+/* 폰트스타일3 : 본문 (11px, 보통, 왼쪽) */
+
+.style-body {
+
+  font-size: 11px;
+
+  font-weight: normal;
+
+  text-align: left;
+
+  margin-bottom: 5px; 
+
+  white-space: pre-wrap; /* 줄바꿈 유지 */
+
+  line-height: 1.6; /* 가독성을 위한 줄간격 추가 */
+
+}
+
+
+
+/* 폰트스타일4 : 본문 가운데정렬 (14px, 보통, 가운데) */
+
+.style-bodycenter {
+
+  font-size: 14px;
+
+  font-weight: normal;
+
+  text-align: center;
+
+  margin-bottom: 15px;
+
+}
+
+
+
+/* 폰트스타일5 : 별첨제목 (15px, 굵게, 왼쪽) */
+
+.style-attachment {
+
+  font-size: 15px;
+
+  font-weight: bold;
+
+  text-align: left;
+
+  margin-top: 50px; /* 별첨 위 여백 넉넉히 */
+
+  margin-bottom: 20px;
+
+  page-break-before: always; /* 별첨 앞에서 항상 페이지 나눔 (인쇄 시) */
+
+}
+
+
+
+/* 인쇄 스타일 (웹 브라우저 인쇄 기능 사용 시 적용) */
+
+@media print {
+
+  @page {
+
+    size: A4;
+
+    margin: 15mm; /* 인쇄 시 여백 설정 */
+
+  }
+
+  
+
+  body {
+
+    background-color: white;
+
+  }
+
+
+
+  body * {
+
+    visibility: hidden; /* 전체 숨김 */
+
+  }
+
+  
+
+  .contract-editor,
+
+  .contract-editor * {
+
+    visibility: visible; /* 계약서 내용만 표시 */
+
+  }
+
+  
+
+  .contract-editor {
+
+    position: absolute;
+
+    left: 0;
+
+    top: 0;
+
+    width: 100%;
+
+  }
+
+  
+
+  .contract-page {
+
+    width: 100%;
+
+    margin: 0;
+
+    padding: 0;
+
+    border: none;
+
+    box-shadow: none;
+
+    height: auto !important;
+
+    page-break-after: auto; /* 내용에 따라 자연스럽게 넘김 */
+
+  }
+
+  
+
+  /* 강제 페이지 넘김이 필요한 요소 (별첨 등) */
+
+  .style-attachment, 
+
+  div[style*="page-break-before: always"] {
+
+    page-break-before: always !important;
+
+    margin-top: 0;
+
+  }
+
+}
