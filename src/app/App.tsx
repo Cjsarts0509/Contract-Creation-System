@@ -6,7 +6,7 @@ import html2canvas from 'html2canvas';
 import { 
   Undo, Redo, Printer, 
   RotateCcw, Check, Save, RefreshCw, AlertTriangle, AlertCircle, Calendar, 
-  ChevronLeft, ChevronRight, FileText, Image as ImageIcon, FileCode, X 
+  ChevronLeft, ChevronRight, FileText, Image as ImageIcon, FileCode, X, Github
 } from 'lucide-react';
 import { useIsMobile } from './components/ui/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
@@ -784,6 +784,9 @@ export default function App() {
             <div className="p-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-[#5c7cfa]">
                 <h1 className="text-lg font-semibold text-[#3e5168]">계약서 작성 시스템</h1>
+                <a href="https://github.com/Cjsarts0509/Contract-Creation-System" target="_blank" rel="noopener noreferrer" className="ml-auto text-gray-400 hover:text-black transition-colors" title="GitHub 저장소 이동">
+                  <Github className="w-5 h-5" />
+                </a>
               </div>
               <section className="mb-6">
                 <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">계약서 양식</h4>
@@ -853,7 +856,12 @@ export default function App() {
         <div className="w-full flex flex-col h-[100dvh]">
           <Tabs value={mobileTab} onValueChange={(v: string) => setMobileTab(v as 'input' | 'preview')} className="flex flex-col h-full">
             <div className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
-               <h1 className="text-lg font-bold text-[#3e5168]">계약서 시스템</h1>
+               <div className="flex items-center gap-2">
+                 <h1 className="text-lg font-bold text-[#3e5168]">계약서 시스템</h1>
+                 <a href="https://github.com/Cjsarts0509/Contract-Creation-System" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-black transition-colors" title="GitHub 저장소 이동">
+                   <Github className="w-5 h-5" />
+                 </a>
+               </div>
                <TabsList className="grid w-40 grid-cols-2">
                 <TabsTrigger value="input">입력</TabsTrigger>
                 <TabsTrigger value="preview">미리보기</TabsTrigger>
