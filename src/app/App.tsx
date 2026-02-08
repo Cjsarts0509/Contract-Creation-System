@@ -50,7 +50,7 @@ const isRealDate = (dateStr: string) => {
 
 export default function App() {
   const isMobileHook = useIsMobile();
-  
+   
   // 태블릿 감지 로직
   const [isDesktopLike, setIsDesktopLike] = useState(false);
   useEffect(() => {
@@ -73,11 +73,11 @@ export default function App() {
     contractDate: '', tradeStartDate: '', tradeEndDate: ''
   });
   const [tradeInfo, setTradeInfo] = useState<Record<string, string>>({});
-   
+    
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [warningModal, setWarningModal] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
   const [showSaveModal, setShowSaveModal] = useState(false);
-   
+    
   const [calendarTarget, setCalendarTarget] = useState<keyof typeof basicInfo | null>(null);
   const [currentCalDate, setCurrentCalDate] = useState(new Date());
 
@@ -86,7 +86,7 @@ export default function App() {
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const inputTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRestoringRef = useRef<boolean>(false);
-   
+    
   const [selectedTable, setSelectedTable] = useState<HTMLTableElement | null>(null);
   const [selectedCell, setSelectedCell] = useState<HTMLTableCellElement | null>(null);
   const [fontSize, setFontSize] = useState<string>('13');
@@ -94,7 +94,7 @@ export default function App() {
   const [cellBgColor, setCellBgColor] = useState<string>('#ffffff');
   const [fontStyle, setFontStyle] = useState<string>('normal');
   const [textAlign, setTextAlign] = useState<string>('left');
-   
+    
   const savedSelectionRef = useRef<Range | null>(null);
   const [mobileTab, setMobileTab] = useState<'input' | 'preview'>('input');
   
@@ -175,7 +175,7 @@ export default function App() {
     const days = [];
     for (let i = 0; i < firstDay; i++) days.push(null);
     for (let i = 1; i <= lastDate; i++) days.push(i);
-    
+     
     const modalClass = isMobile 
       ? "bg-white rounded-lg shadow-2xl p-5 w-[90%] max-w-[360px]" 
       : "bg-white rounded-lg shadow-2xl p-5 w-80";
@@ -257,10 +257,10 @@ export default function App() {
     }
     const data: ContractData = { ...basicInfo, tradePeriod: period, ...tradeInfo };
     const updated = getContractTemplate(contractType, data);
-    
+     
     setCurrentEditorContent(updated);
     addToHistory(updated);
-    
+     
     if (isMobile) {
       setMobileTab('preview');
     }
@@ -317,12 +317,12 @@ export default function App() {
     if (selection.rangeCount > 0) savedSelectionRef.current = range.cloneRange();
     let element = range.commonAncestorContainer.nodeType === Node.TEXT_NODE ? range.commonAncestorContainer.parentElement : range.commonAncestorContainer as HTMLElement;
     if (!editorRef.current?.contains(element)) return;
-    
+     
     const table = element?.closest('table') as HTMLTableElement;
     setSelectedTable(table || null);
     const cell = element?.closest('td') as HTMLTableCellElement;
     setSelectedCell(cell || null);
-    
+     
     if (element && editorRef.current?.contains(element)) {
       const computedStyle = window.getComputedStyle(element);
       setFontSize(parseInt(computedStyle.fontSize).toString());
@@ -518,10 +518,58 @@ export default function App() {
           currentHeight += clone.offsetHeight;
         }
       }
+      
       if (format === 'jpg') {
+        // [수정] JPG 저장 시 oklch 색상 오류 방지를 위한 색상 변환 로직 (PDF에는 영향 없음)
+        const sanitizeStyles = (root: HTMLElement) => {
+            const cvs = document.createElement('canvas');
+            cvs.width = 1; cvs.height = 1;
+            const ctx = cvs.getContext('2d');
+            if (!ctx) return;
+            
+            // oklch/oklab 등 html2canvas 미지원 색상을 캔버스를 통해 RGB로 변환
+            const convertToRgb = (color: string) => {
+                if (!color || (!color.includes('oklch') && !color.includes('oklab') && !color.includes('lab'))) return color;
+                ctx.fillStyle = color;
+                return ctx.fillStyle;
+            };
+
+            const processElement = (el: HTMLElement) => {
+                const style = window.getComputedStyle(el);
+                
+                // 배경색, 글자색, 테두리색 확인 및 변환
+                if (style.backgroundColor && (style.backgroundColor.includes('oklch') || style.backgroundColor.includes('oklab'))) {
+                    el.style.backgroundColor = convertToRgb(style.backgroundColor);
+                }
+                if (style.color && (style.color.includes('oklch') || style.color.includes('oklab'))) {
+                    el.style.color = convertToRgb(style.color);
+                }
+                if (style.borderColor && (style.borderColor.includes('oklch') || style.borderColor.includes('oklab'))) {
+                    el.style.borderColor = convertToRgb(style.borderColor);
+                }
+                
+                // 테두리 방향별 색상 체크 (borderColor가 축약형으로 안 나올 경우 대비)
+                ['borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor'].forEach(prop => {
+                    const val = style[prop as any];
+                    if (val && (val.includes('oklch') || val.includes('oklab'))) {
+                        el.style[prop as any] = convertToRgb(val);
+                    }
+                });
+            };
+
+            processElement(root);
+            root.querySelectorAll('*').forEach(node => {
+                if (node instanceof HTMLElement) processElement(node);
+            });
+        };
+
+        // 복제된 컨테이너에 대해 스타일 정제 수행
+        sanitizeStyles(container);
+
         const canvas = await html2canvas(container, { scale: 2, useCORS: true });
         const link = document.createElement('a'); link.download = fileName; link.href = canvas.toDataURL('image/jpeg', 0.9); link.click();
       } else {
+        // [유지] PDF 저장 로직 (건드리지 않음)
         const pdf = new jsPDF('p', 'mm', 'a4');
         for (let i = 0; i < pages.length; i++) {
           const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
@@ -586,7 +634,7 @@ export default function App() {
           }
         }
       `}</style>
-       
+        
       {showResetConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm print:hidden">
           <div className="bg-white rounded-lg shadow-xl p-6 w-[360px] text-center">
@@ -752,7 +800,7 @@ export default function App() {
             <div className="mb-4">
                 <button onMouseDown={(e) => e.preventDefault()} onClick={insertTable} className="w-full bg-[#5c7cfa] text-white px-4 py-2 rounded text-sm font-medium">표 삽입</button>
             </div>
-            
+             
             {selectedTable && (
               <div className="space-y-4 pt-4 border-t border-gray-200">
                 <div>
@@ -803,7 +851,7 @@ export default function App() {
                   <button onMouseDown={(e) => e.preventDefault()} onClick={addTableColumn} className="px-3 py-2 bg-blue-50 text-blue-600 rounded text-sm font-medium hover:bg-blue-100">+ 열</button>
                   <button onMouseDown={(e) => e.preventDefault()} onClick={removeTableColumn} className="px-3 py-2 bg-red-50 text-red-600 rounded text-sm font-medium hover:bg-red-100">- 열</button>
                 </div>
-                
+                 
                 {selectedCell && (
                     <div className="mt-4 pt-4 border-t">
                         <label className="block text-sm font-medium text-gray-700 mb-2">셀 배경색</label>
@@ -863,7 +911,7 @@ export default function App() {
               </section>
               
               <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
-                 <div className="space-y-2">
+                  <div className="space-y-2">
                   {contractType && CONTRACT_CONFIG[contractType] ? (
                     CONTRACT_CONFIG[contractType].map((field) => (
                       <div key={field.key} className={`grid ${isMobile ? 'grid-cols-1 gap-1' : 'grid-cols-[120px_1fr] gap-2 items-center'}`}>
