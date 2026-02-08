@@ -495,7 +495,7 @@ export default function App() {
       // 로딩 표시
       document.body.style.cursor = 'wait';
 
-      // 1. 페이지 분할 (PDF/JPG 공통)
+      // 1. [스마트 페이지네이션] 페이지 분할 로직 (테이블 자동 자르기 포함)
       // 화면 밖 임시 컨테이너에 페이지별로 내용을 나눔
       const container = document.createElement('div');
       Object.assign(container.style, { position: 'fixed', top: '0', left: '-10000px', zIndex: '-1000', fontFamily: 'sans-serif', width: '210mm' });
@@ -505,42 +505,102 @@ export default function App() {
       const createNewPage = () => {
         const page = document.createElement('div');
         page.className = 'contract-page';
-        Object.assign(page.style, { width: `210mm`, height: `297mm`, padding: `20mm 15mm`, backgroundColor: '#ffffff', color: '#000000', boxSizing: 'border-box', overflow: 'hidden' });
+        Object.assign(page.style, { width: `210mm`, height: `297mm`, padding: `20mm 15mm`, backgroundColor: '#ffffff', color: '#000000', boxSizing: 'border-box', overflow: 'hidden', position: 'relative' });
         container.appendChild(page);
         pages.push(page);
         return page;
       };
 
       let currentPage = createNewPage();
-      const MAX_HEIGHT_PX = (297 - 40) * 3.78; 
-      let currentHeight = 0;
+      // 내용이 들어갈 수 있는 최대 높이 (A4 높이 - 상하 여백)
+      // 정확한 계산을 위해 clientHeight 등을 사용해도 되지만, 고정값 사용이 안전
+      const CONTENT_HEIGHT_LIMIT = (297 - 40) * 3.78; // 약 970px
       
-      // 에디터 내용 복사 및 페이지 분할
+      // 높이 확인용 함수
+      const checkHeight = (page: HTMLElement) => {
+          // padding을 제외한 실제 컨텐츠 높이를 구하기 위해 scrollHeight 사용 권장
+          // 단, page 자체가 970px로 제한되어 있진 않으므로, children 높이 합산 혹은 scrollHeight 체크
+          return page.scrollHeight - (20 * 3.78 * 2); // padding 대략 보정 (실제론 정확한 계산 필요하나, 여기선 append 후 overflow 체크 방식 사용)
+      };
+
+      const appendElementWithSmartSplit = (element: HTMLElement) => {
+          // 1. 일단 현재 페이지에 넣어본다.
+          currentPage.appendChild(element);
+          
+          // 2. 높이 초과 여부 확인 (오차 범위 5px)
+          if (currentPage.scrollHeight > (297 * 3.78) + 5) { // A4 전체 높이 기준 오버플로우 체크
+              currentPage.removeChild(element); // 다시 뺌
+              
+              // 3. 테이블인 경우 분할 시도
+              if (element.tagName === 'TABLE') {
+                  const table = element as HTMLTableElement;
+                  const thead = table.querySelector('thead');
+                  const tbody = table.querySelector('tbody');
+                  const rows = tbody ? Array.from(tbody.children) : Array.from(table.querySelectorAll('tr'));
+                  
+                  // 현재 페이지에 들어갈 테이블 껍데기 생성
+                  let currentTable = table.cloneNode(false) as HTMLTableElement;
+                  if (thead) currentTable.appendChild(thead.cloneNode(true));
+                  let currentTbody = document.createElement('tbody');
+                  currentTable.appendChild(currentTbody);
+                  currentPage.appendChild(currentTable); // 일단 추가
+                  
+                  let rowAddedToCurrent = false;
+
+                  // 행 단위로 추가하며 높이 체크
+                  for (let i = 0; i < rows.length; i++) {
+                      const row = rows[i] as HTMLElement;
+                      currentTbody.appendChild(row.cloneNode(true));
+                      
+                      // 행 추가 후 넘치면
+                      if (currentPage.scrollHeight > (297 * 3.78) + 5) {
+                          currentTbody.removeChild(currentTbody.lastChild!); // 방금 넣은 행 뺌
+                          
+                          // 만약 행을 하나도 못 넣었는데 넘쳤다면? (헤더만 넣어도 넘침 or 첫 행이 매우 큼)
+                          // -> 그냥 다음 페이지로 통째로 넘기는 게 나을 수 있음
+                          if (!rowAddedToCurrent && i === 0) {
+                              currentPage.removeChild(currentTable);
+                              currentPage = createNewPage();
+                              currentPage.appendChild(element); // 원본 통째로 이동 (분할 포기 - 너무 큰 단일 행 등)
+                              return;
+                          }
+
+                          // 새 페이지 생성
+                          currentPage = createNewPage();
+                          
+                          // 새 페이지용 테이블 껍데기 생성
+                          currentTable = table.cloneNode(false) as HTMLTableElement;
+                          if (thead) currentTable.appendChild(thead.cloneNode(true)); // 헤더 반복 (선택사항)
+                          currentTbody = document.createElement('tbody');
+                          currentTable.appendChild(currentTbody);
+                          currentPage.appendChild(currentTable);
+                          
+                          // 아까 못 넣은 행을 여기에 추가
+                          currentTbody.appendChild(row.cloneNode(true));
+                          rowAddedToCurrent = true; // 새 페이지엔 들어감
+                      } else {
+                          rowAddedToCurrent = true;
+                      }
+                  }
+              } else {
+                  // 테이블이 아니면 그냥 다음 페이지로 통째로 이동
+                  currentPage = createNewPage();
+                  currentPage.appendChild(element);
+              }
+          }
+      };
+
+      // 에디터 내용 순회하며 스마트 분할 적용
       const childNodes = Array.from((sourceElement.querySelector('.contract-page') || sourceElement).children) as HTMLElement[];
       for (const child of childNodes) {
-        const clone = child.cloneNode(true) as HTMLElement;
-        currentPage.appendChild(clone);
-        if (currentHeight + clone.offsetHeight > MAX_HEIGHT_PX) {
-          currentPage.removeChild(clone);
-          currentPage = createNewPage();
-          currentPage.appendChild(clone);
-          currentHeight = clone.offsetHeight;
-        } else {
-          currentHeight += clone.offsetHeight;
-        }
+          appendElementWithSmartSplit(child.cloneNode(true) as HTMLElement);
       }
       
       if (format === 'jpg') {
-         // [원초적 해결] CSS 파싱 에러 방지: 
-         // 1. 모든 요소의 Computed Style을 인라인 스타일로 박제
-         // 2. Class 속성 제거 (외부 CSS 의존성 제거)
-         // 3. Iframe을 생성하여 외부 CSS 파일 없이(No Stylesheet) 렌더링 후 캡처
-         
-         // 1 & 2. 스타일 박제 및 클래스 제거 함수
+         // [JPG 저장 시 스타일 박제 & Iframe 격리]
          const flattenStyles = (node: HTMLElement) => {
             const computed = window.getComputedStyle(node);
             
-            // oklch to RGB 변환기
             const cvs = document.createElement('canvas');
             cvs.width = 1; cvs.height = 1;
             const ctx = cvs.getContext('2d');
@@ -578,7 +638,7 @@ export default function App() {
          // 임시 컨테이너에 대해 스타일 박제 수행
          flattenStyles(container);
 
-         // 3. 격리된 Iframe 생성
+         // 격리된 Iframe 생성
          const iframe = document.createElement('iframe');
          Object.assign(iframe.style, { position: 'fixed', top: '-10000px', left: '-10000px', width: '210mm', height: (297 * pages.length) + 'mm', border: 'none' });
          document.body.appendChild(iframe);
@@ -586,23 +646,18 @@ export default function App() {
          const doc = iframe.contentDocument || iframe.contentWindow?.document;
          if (!doc) throw new Error("Iframe error");
 
-         // CSS 파일 링크 없이 순수 HTML(인라인 스타일 포함)만 주입
          doc.open();
          doc.write('<html><head><style>body { margin: 0; padding: 0; background: white; } * { box-sizing: border-box; }</style></head><body></body></html>');
          doc.close();
          
-         // 박제된 컨테이너 내용을 Iframe Body로 이동
          doc.body.innerHTML = container.innerHTML;
 
-         // 이미지 로딩 대기 등 안전장치
          await new Promise(r => setTimeout(r, 100));
 
-         // 4. 캡처 수행 (Iframe 내부 대상)
          const canvas = await html2canvas(doc.body, { 
              scale: 2, 
              useCORS: true,
              backgroundColor: '#ffffff'
-             // Iframe 내부에는 외부 CSS가 없으므로 ignoreElements 불필요
          });
          
          const link = document.createElement('a'); 
@@ -613,7 +668,8 @@ export default function App() {
          document.body.removeChild(iframe);
 
       } else {
-        // [유지] PDF 저장 로직 (건드리지 않음)
+        // [PDF 저장] - JPG 로직과 동일하게 분할된 페이지를 사용하되, 스타일 박제는 생략 (PDF는 기본적으로 괜찮음)
+        // 하지만 container가 이미 분할되어 있으므로 이를 활용
         const pdf = new jsPDF('p', 'mm', 'a4');
         for (let i = 0; i < pages.length; i++) {
           const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
