@@ -11,8 +11,14 @@
 
 ---
 
+### 👤 제작자
+* **교보문고 상품지원팀 조준수**
+
+---
+
 ### 🐛 버그 리포트
-프로그램에 문제가 있나요? <a href="https://docs.google.com/spreadsheets/d/1J8Z6sXplkjft0hXHyKArgv9Hle9Q4E8dvAMANlgPykU/edit?usp=sharing" target="_blank"><b>여기에서 버그 리포트 접수</b></a>를 부탁드립니다.
+프로그램에 문제가 있나요? [**여기에서 버그 리포트 접수**](https://docs.google.com/spreadsheets/d/1J8Z6sXplkjft0hXHyKArgv9Hle9Q4E8dvAMANlgPykU/edit?usp=sharing)를 부탁드립니다.  
+*(※ 깃허브 정책상 링크 클릭 시 현재 창에서 열립니다. 새 탭으로 열려면 `Ctrl + 클릭`을 이용해 주세요.)*
 
 ---
 
@@ -22,12 +28,3 @@
 |:---:|:---|:---|
 | **2026-02-08** | 🎉 Release | 초기 버전 출시 |
 | | | |
-
----
-
-### 📊 GitHub Stats
-<p align="left">
-  <a href="https://github.com/본인계정ID" target="_blank">
-    <img src="https://github-readme-stats.vercel.app/api?username=본인계정ID&show_icons=true&theme=radial" height="150" />
-  </a>
-</p>
