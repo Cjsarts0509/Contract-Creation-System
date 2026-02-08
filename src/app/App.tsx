@@ -467,10 +467,10 @@ export default function App() {
 
   const executeSave = async (format: 'pdf' | 'jpg' | 'html') => {
     let sourceElement = editorRef.current;
-    let tempContainer = null;
-
+    
+    // 원본이 없으면 에디터 내용을 HTML 문자열에서 생성
     if (!sourceElement && currentEditorContent) {
-        tempContainer = document.createElement('div');
+        const tempContainer = document.createElement('div');
         tempContainer.innerHTML = currentEditorContent;
         sourceElement = tempContainer;
     }
@@ -479,6 +479,8 @@ export default function App() {
 
     try {
       const fileName = getFileName(format);
+      
+      // HTML 저장
       if (format === 'html') {
         const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title><style>body{font-family:sans-serif;line-height:1.5;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #000;padding:8px;}</style></head><body>${currentEditorContent}</body></html>`;
         const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -489,10 +491,16 @@ export default function App() {
         setShowSaveModal(false);
         return;
       }
+      
+      // 로딩 표시
       document.body.style.cursor = 'wait';
+
+      // 1. 페이지 분할 (PDF/JPG 공통)
+      // 화면 밖 임시 컨테이너에 페이지별로 내용을 나눔
       const container = document.createElement('div');
       Object.assign(container.style, { position: 'fixed', top: '0', left: '-10000px', zIndex: '-1000', fontFamily: 'sans-serif', width: '210mm' });
       document.body.appendChild(container);
+
       const pages: HTMLDivElement[] = [];
       const createNewPage = () => {
         const page = document.createElement('div');
@@ -502,9 +510,12 @@ export default function App() {
         pages.push(page);
         return page;
       };
+
       let currentPage = createNewPage();
       const MAX_HEIGHT_PX = (297 - 40) * 3.78; 
       let currentHeight = 0;
+      
+      // 에디터 내용 복사 및 페이지 분할
       const childNodes = Array.from((sourceElement.querySelector('.contract-page') || sourceElement).children) as HTMLElement[];
       for (const child of childNodes) {
         const clone = child.cloneNode(true) as HTMLElement;
@@ -520,54 +531,87 @@ export default function App() {
       }
       
       if (format === 'jpg') {
-        // [수정] JPG 저장 시 oklch 색상 오류 방지를 위한 색상 변환 로직 (PDF에는 영향 없음)
-        const sanitizeStyles = (root: HTMLElement) => {
+         // [원초적 해결] CSS 파싱 에러 방지: 
+         // 1. 모든 요소의 Computed Style을 인라인 스타일로 박제
+         // 2. Class 속성 제거 (외부 CSS 의존성 제거)
+         // 3. Iframe을 생성하여 외부 CSS 파일 없이(No Stylesheet) 렌더링 후 캡처
+         
+         // 1 & 2. 스타일 박제 및 클래스 제거 함수
+         const flattenStyles = (node: HTMLElement) => {
+            const computed = window.getComputedStyle(node);
+            
+            // oklch to RGB 변환기
             const cvs = document.createElement('canvas');
             cvs.width = 1; cvs.height = 1;
             const ctx = cvs.getContext('2d');
-            if (!ctx) return;
+            const toRgb = (val: string) => {
+                if(!ctx || !val || (!val.includes('oklch') && !val.includes('oklab'))) return val;
+                ctx.fillStyle = val;
+                return ctx.fillStyle === 'rgba(0, 0, 0, 0)' && val !== 'transparent' ? val : ctx.fillStyle;
+            };
+
+            const properties = [
+                'display', 'position', 'width', 'height', 'margin', 'padding', 'border',
+                'border-top', 'border-bottom', 'border-left', 'border-right',
+                'border-collapse', 'border-spacing',
+                'font', 'font-family', 'font-size', 'font-weight', 'font-style', 'color',
+                'background', 'background-color',
+                'text-align', 'vertical-align', 'line-height', 'white-space', 'word-break',
+                'box-shadow', 'opacity', 'visibility', 'z-index'
+            ];
             
-            // oklch/oklab 등 html2canvas 미지원 색상을 캔버스를 통해 RGB로 변환
-            const convertToRgb = (color: string) => {
-                if (!color || (!color.includes('oklch') && !color.includes('oklab') && !color.includes('lab'))) return color;
-                ctx.fillStyle = color;
-                return ctx.fillStyle;
-            };
-
-            const processElement = (el: HTMLElement) => {
-                const style = window.getComputedStyle(el);
-                
-                // 배경색, 글자색, 테두리색 확인 및 변환
-                if (style.backgroundColor && (style.backgroundColor.includes('oklch') || style.backgroundColor.includes('oklab'))) {
-                    el.style.backgroundColor = convertToRgb(style.backgroundColor);
+            properties.forEach(prop => {
+                let val = computed.getPropertyValue(prop);
+                if(val && (val.includes('oklch') || val.includes('oklab'))) {
+                    val = val.replace(/(oklch|oklab)\([^)]+\)/g, (m) => toRgb(m));
                 }
-                if (style.color && (style.color.includes('oklch') || style.color.includes('oklab'))) {
-                    el.style.color = convertToRgb(style.color);
-                }
-                if (style.borderColor && (style.borderColor.includes('oklch') || style.borderColor.includes('oklab'))) {
-                    el.style.borderColor = convertToRgb(style.borderColor);
-                }
-                
-                // 테두리 방향별 색상 체크 (borderColor가 축약형으로 안 나올 경우 대비)
-                ['borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor'].forEach(prop => {
-                    const val = style[prop as any];
-                    if (val && (val.includes('oklch') || val.includes('oklab'))) {
-                        el.style[prop as any] = convertToRgb(val);
-                    }
-                });
-            };
-
-            processElement(root);
-            root.querySelectorAll('*').forEach(node => {
-                if (node instanceof HTMLElement) processElement(node);
+                if(val) node.style.setProperty(prop, val, 'important');
             });
-        };
 
-        // 복제된 컨테이너에 대해 스타일 정제 수행
-        sanitizeStyles(container);
+            node.removeAttribute('class');
+            
+            Array.from(node.children).forEach(child => {
+                if(child instanceof HTMLElement) flattenStyles(child);
+            });
+         };
 
-        const canvas = await html2canvas(container, { scale: 2, useCORS: true });
-        const link = document.createElement('a'); link.download = fileName; link.href = canvas.toDataURL('image/jpeg', 0.9); link.click();
+         // 임시 컨테이너에 대해 스타일 박제 수행
+         flattenStyles(container);
+
+         // 3. 격리된 Iframe 생성
+         const iframe = document.createElement('iframe');
+         Object.assign(iframe.style, { position: 'fixed', top: '-10000px', left: '-10000px', width: '210mm', height: (297 * pages.length) + 'mm', border: 'none' });
+         document.body.appendChild(iframe);
+         
+         const doc = iframe.contentDocument || iframe.contentWindow?.document;
+         if (!doc) throw new Error("Iframe error");
+
+         // CSS 파일 링크 없이 순수 HTML(인라인 스타일 포함)만 주입
+         doc.open();
+         doc.write('<html><head><style>body { margin: 0; padding: 0; background: white; } * { box-sizing: border-box; }</style></head><body></body></html>');
+         doc.close();
+         
+         // 박제된 컨테이너 내용을 Iframe Body로 이동
+         doc.body.innerHTML = container.innerHTML;
+
+         // 이미지 로딩 대기 등 안전장치
+         await new Promise(r => setTimeout(r, 100));
+
+         // 4. 캡처 수행 (Iframe 내부 대상)
+         const canvas = await html2canvas(doc.body, { 
+             scale: 2, 
+             useCORS: true,
+             backgroundColor: '#ffffff'
+             // Iframe 내부에는 외부 CSS가 없으므로 ignoreElements 불필요
+         });
+         
+         const link = document.createElement('a'); 
+         link.download = fileName; 
+         link.href = canvas.toDataURL('image/jpeg', 0.9); 
+         link.click();
+         
+         document.body.removeChild(iframe);
+
       } else {
         // [유지] PDF 저장 로직 (건드리지 않음)
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -578,11 +622,16 @@ export default function App() {
         }
         pdf.save(fileName);
       }
+      
       document.body.removeChild(container);
       document.body.style.cursor = 'default';
       setShowSaveModal(false);
       alert('저장이 완료되었습니다.');
-    } catch (e: any) { alert('저장 실패: ' + e.message); document.body.style.cursor = 'default'; }
+
+    } catch (e: any) { 
+        alert('저장 실패: ' + e.message); 
+        document.body.style.cursor = 'default'; 
+    }
   };
 
   const handleSaveClick = () => { 
@@ -721,7 +770,7 @@ export default function App() {
                   ))}
                 </div>
               </section>
-
+              
               <section className="mb-6">
                 <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">매입처거래정보</h4>
                 <div className="space-y-2">
