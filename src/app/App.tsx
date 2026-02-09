@@ -1021,7 +1021,7 @@ export default function App() {
           </div>
         </>
       )}
-      {/* ... (모바일 뷰 코드 유지) ... */}
+      {/* ... (모바일 뷰 코드) ... */}
       {isMobile && (
         <div className="w-full flex flex-col h-[100dvh] print:hidden">
           <Tabs value={mobileTab} onValueChange={(v: string) => setMobileTab(v as 'input' | 'preview')} className="flex flex-col h-full">
@@ -1033,8 +1033,9 @@ export default function App() {
               </TabsList>
             </div>
             <TabsContent value="input" className="flex-1 overflow-y-auto p-4 bg-gray-50 mt-0">
-              {/* 모바일용 입력 폼 복사 (기존 코드와 동일) */}
+              {/* 모바일용 입력 폼 */}
               <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3 rounded-t-sm">계약서 양식</h4>
                 <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 gap-2'}`}>
                   {['direct', 'directPB', 'specific', 'specificDelivery', 'contractETC1', 'contractETC2', 'contractETC3', 'contractETC4', 'contractETC5', 'contractETC6'].map((type, idx) => (
                     <button key={type} onClick={() => handleContractTypeSelect(type)} className={`px-4 ${isMobile ? 'py-3 text-base' : 'py-2 text-sm'} rounded transition-colors ${contractType === type ? 'bg-[#5c7cfa] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
@@ -1043,7 +1044,42 @@ export default function App() {
                   ))}
                 </div>
               </section>
-              {/* (나머지 모바일 섹션 생략 - 기존 코드 유지) */}
+
+              <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3 rounded-t-sm">매입처기본정보</h4>
+                <div className="space-y-3">
+                  {[{ label: '매입처명', key: 'supplierName' }, { label: '대표이사', key: 'ceo' }, { label: '사업장주소', key: 'address' }].map((item) => (
+                    <div key={item.key} className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold text-gray-700">{item.label}</label>
+                      <input type="text" value={basicInfo[item.key as keyof typeof basicInfo]} onChange={(e) => handleBasicInfoChange(item.key, e.target.value)} className="border border-gray-300 px-3 py-3 rounded text-sm focus:outline-none focus:border-[#5c7cfa] w-full" placeholder={`${item.label} 입력`} />
+                    </div>
+                  ))}
+                  {[{ label: '계약일자', key: 'contractDate' }, { label: '거래시작일자', key: 'tradeStartDate' }, { label: '거래종료일자', key: 'tradeEndDate' }].map((item) => (
+                    <div key={item.key} className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold text-gray-700">{item.label}</label>
+                      <div className="relative flex items-center">
+                        <input type="text" value={basicInfo[item.key as keyof typeof basicInfo]} placeholder="YYYY-MM-DD" maxLength={10} onChange={(e) => handleDateChange(item.key as keyof typeof basicInfo, e.target.value)} onBlur={() => handleDateBlur(item.key as keyof typeof basicInfo)} className="w-full border border-gray-300 px-3 py-3 rounded text-sm focus:outline-none focus:border-[#5c7cfa] pr-10" />
+                        <button onClick={() => setCalendarTarget(item.key as keyof typeof basicInfo)} className="absolute right-2 p-2 text-gray-400 hover:text-[#5c7cfa] transition-colors"><Calendar className="w-6 h-6"/></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3 rounded-t-sm">매입처거래정보</h4>
+                <div className="space-y-3">
+                  {contractType && CONTRACT_CONFIG[contractType] ? (
+                    CONTRACT_CONFIG[contractType].map((field) => (
+                      <div key={field.key} className="flex flex-col gap-1">
+                        <label className="text-sm font-semibold text-gray-700">{field.label}</label>
+                        <input type="text" value={tradeInfo[field.key] || ''} onChange={(e) => handleTradeInfoChange(field.key, e.target.value, field.type)} className="border border-gray-300 px-3 py-3 rounded text-sm focus:outline-none focus:border-[#5c7cfa] w-full" placeholder={field.placeholder} />
+                      </div>
+                    ))
+                  ) : (<p className="text-sm text-gray-500 text-center py-4">계약서 양식을 선택해주세요.</p>)}
+                </div>
+              </section>
+
               <section className="flex flex-wrap gap-2 pb-24">
                   <button onClick={handleReset} className="flex-1 bg-gray-500 text-white px-3 py-2.5 rounded hover:bg-gray-600 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><RotateCcw className="w-4 h-4" />초기화</button>
                   <button onClick={handleApply} className="flex-1 bg-[#5c7cfa] text-white px-3 py-2.5 rounded hover:bg-[#4c6cdf] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Check className="w-4 h-4" />적용</button>
