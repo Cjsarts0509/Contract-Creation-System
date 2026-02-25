@@ -1,6 +1,6 @@
-import { ContractData } from './contractTemplates';
+import { ContractData, getSignatureHTML } from './contractTemplates';
 
-// [최종] 제조 위탁 계약서 (PB) - 빈 페이지 버그 해결 및 스타일 통합
+// [수정 완료] 제조 위탁 계약서 (PB)
 export const directPurchasePBTemplate = (data: ContractData) => `
 <div class="contract-page contract-paper">
   <div class="style-title">제조 위탁 계약서</div>
@@ -97,37 +97,7 @@ export const directPurchasePBTemplate = (data: ContractData) => `
     별첨 2. 보안유지 및 준수사항
   </div>
 
-  <div class="signature-section" style="margin-top: 50px;">
-    <div class="style-bodycenter" style="margin-bottom: 30px;">${data.contractDate || '계약일자 미입력'}</div>
-    
-    <div class="signature-row">
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>서울특별시 종로구 종로 1</span>
-        </div>
-        <div class="signature-field">
-          <span>주식회사 교보문고</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>허 정 도</span>
-        </div>
-      </div>
-      
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>${data.address || '주소 미입력'}</span>
-        </div>
-        <div class="signature-field">
-          <span>${data.supplierName || 'ㅁㅁㅁ'}</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>${data.ceo || '대표자 미입력'}</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  ${getSignatureHTML(data, { kyoboAddress: '서울특별시 종로구 종로 1', kyoboCeo: '허 정 도' })}
 
   <div class="style-attachment" style="page-break-before: always; margin-top: 40px;">&lt;별첨1&gt; 개별 계약서</div>
   <div class="style-body">
@@ -148,35 +118,7 @@ export const directPurchasePBTemplate = (data: ContractData) => `
     8. 주요 검수 항목 : 작업지시서 기준 상품 사양 및 디자인 일치 여부
   </div>
 
-  <div class="signature-section" style="margin-top: 50px;">
-    <div class="signature-row">
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>서울특별시 종로구 종로 1</span>
-        </div>
-        <div class="signature-field">
-          <span>주식회사 교보문고</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>허 정 도</span>
-        </div>
-      </div>
-      
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>${data.address || '주소 미입력'}</span>
-        </div>
-        <div class="signature-field">
-          <span>${data.supplierName || 'ㅁㅁㅁ'}</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>${data.ceo || '대표자 미입력'}</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  ${getSignatureHTML(data, { kyoboAddress: '서울특별시 종로구 종로 1', kyoboCeo: '허 정 도' })}
 
   <div class="style-attachment" style="margin-top: 40px; page-break-before: auto !important;">&lt;별첨2&gt; 보안유지 및 준수사항</div>
   <div class="style-body">

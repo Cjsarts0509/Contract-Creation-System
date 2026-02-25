@@ -1,6 +1,6 @@
-import { ContractData } from './contractTemplates';
+import { ContractData, getSignatureHTML } from './contractTemplates';
 
-// [최종 수정] 직매입 계약서 (별첨1-2 연결 인쇄 버그 수정)
+// [수정 완료] 직매입 계약서
 export const directPurchaseTemplate = (data: ContractData) => `
 <div class="contract-page contract-paper">
   <div class="style-title">직매입 거래계약서</div>
@@ -74,18 +74,18 @@ export const directPurchaseTemplate = (data: ContractData) => `
   <table class="contract-table editable-table" style="width: 100%; border-collapse: collapse;">
     <thead>
       <tr>
-        <th contenteditable="true" style="border: 1px solid #000; padding: 8px; width: 15%;">구분</th>
-        <th contenteditable="true" style="border: 1px solid #000; padding: 8px; width: 35%;">거래품목</th>
-        <th contenteditable="true" style="border: 1px solid #000; padding: 8px; width: 35%;">취급브랜드</th>
-        <th contenteditable="true" style="border: 1px solid #000; padding: 8px; width: 15%;">수수료</th>
+        <th contenteditable="true" style="border: 1px solid #000; padding: 8px; width: 15%; text-align: center; vertical-align: middle;">구분</th>
+        <th contenteditable="true" style="border: 1px solid #000; padding: 8px; width: 35%; text-align: center; vertical-align: middle;">거래품목</th>
+        <th contenteditable="true" style="border: 1px solid #000; padding: 8px; width: 35%; text-align: center; vertical-align: middle;">취급브랜드</th>
+        <th contenteditable="true" style="border: 1px solid #000; padding: 8px; width: 15%; text-align: center; vertical-align: middle;">수수료</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.category || 'ㅁㅁㅁ'}</td>
-        <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.items || 'ㅁㅁㅁ'}</td>
-        <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.brand || 'ㅁㅁㅁ'}</td>
-        <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.commission || 'ㅁㅁㅁ'}%</td>
+        <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.category || 'ㅁㅁㅁ'}</td>
+        <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.items || 'ㅁㅁㅁ'}</td>
+        <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.brand || 'ㅁㅁㅁ'}</td>
+        <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.commission || 'ㅁㅁㅁ'}%</td>
       </tr>
     </tbody>
   </table>
@@ -101,36 +101,6 @@ export const directPurchaseTemplate = (data: ContractData) => `
     상호 합의에 따라 특정기간이나 시즌에만 판매가 진행되는 각종 상품이 출품되었을 시에는 (주) 교보문고는 "${data.supplierName || '□□□'}"(을)에게 당해 특정기간 또는 시즌이 종료된 때로부터 30 일 이내에 당해 상품 매입액의 __% 이내에서 상호 협의 후에 반품을 요청할 수 있다.
   </div>
 
-  <div class="signature-section" style="margin-top: 50px;">
-    <div class="style-bodycenter" style="margin-bottom: 30px;">${data.contractDate || '계약일자 미입력'}</div>
-    
-    <div class="signature-row">
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>서울특별시 종로구 종로 1 (종로 1가, 교보빌딩)</span>
-        </div>
-        <div class="signature-field">
-          <span>(주) 교보문고</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>안병현</span>
-        </div>
-      </div>
-      
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>${data.address || '주소 미입력'}</span>
-        </div>
-        <div class="signature-field">
-          <span>${data.supplierName || '업체명 미입력'}</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>${data.ceo || '대표자 미입력'}</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  ${getSignatureHTML(data, { kyoboAddress: '서울특별시 종로구 종로 1 (종로 1가, 교보빌딩)', kyoboCeo: '안병현' })}
 </div>
 `;

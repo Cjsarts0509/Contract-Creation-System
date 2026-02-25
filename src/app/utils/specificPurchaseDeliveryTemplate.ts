@@ -1,6 +1,6 @@
-import { ContractData } from './contractTemplates';
+import { ContractData, getSignatureHTML } from './contractTemplates';
 
-// 인터넷 거래계약서 (빈 페이지 이슈 해결: 빈 태그 삭제 및 style 직접 적용)
+// [수정 완료] 인터넷 거래계약서
 export const specificPurchaseDeliveryTemplate = (data: ContractData) => `
 <div class="contract-page contract-paper">
   <div class="style-title">인터넷 거래계약서</div>
@@ -81,27 +81,27 @@ export const specificPurchaseDeliveryTemplate = (data: ContractData) => `
   <div class="style-subtitle">▪제 1 조 (수수료율)</div>
   <div class="style-body">${data.supplierName || 'ㅁㅁㅁ'}가 (주)교보문고에게 지급할 수수료율, 배송 주체/배송비 부담은 다음과 같다.</div>
   
- <table class="contract-table editable-table">
+ <table class="contract-table editable-table" style="width: 100%; border-collapse: collapse;">
   <thead>
     <tr>
-      <th style="width: 20%;">구분</th>
-      <th style="width: 20%;">수수료율<br>(Vat 포함)</th>
-      <th style="width: 25%;">배송 주체/배송비부담<br>(고객배송)</th>
-      <th>비고</th>
+      <th style="border: 1px solid #000; padding: 8px; width: 20%; text-align: center; vertical-align: middle;">구분</th>
+      <th style="border: 1px solid #000; padding: 8px; width: 20%; text-align: center; vertical-align: middle;">수수료율<br>(Vat 포함)</th>
+      <th style="border: 1px solid #000; padding: 8px; width: 25%; text-align: center; vertical-align: middle;">배송 주체/배송비부담<br>(고객배송)</th>
+      <th style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">비고</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>${data.supplierName || 'ㅁㅁㅁ'}<br>배송상품</td>
-      <td contenteditable="true">${data.commissionVendor || ''}%</td>
-      <td>${data.supplierName || 'ㅁㅁㅁ'}</td>
-      <td>${data.supplierName || 'ㅁㅁㅁ'}가 구매자에게 직접 배송 판매하는 상품</td>
+      <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.supplierName || 'ㅁㅁㅁ'}<br>배송상품</td>
+      <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.commissionVendor || ''}%</td>
+      <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.supplierName || 'ㅁㅁㅁ'}</td>
+      <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.supplierName || 'ㅁㅁㅁ'}가 구매자에게 직접 배송 판매하는 상품</td>
     </tr>
     <tr>
-      <td>(주)교보문고<br>배송상품</td>
-      <td contenteditable="true">${data.commissionKyobo || ''}%</td>
-      <td>(주)교보문고</td>
-      <td>(주)교보문고가 ${data.supplierName || 'ㅁㅁㅁ'}로부터 상품을 공급받아 구매자에게 배송 판매하는 상품</td>
+      <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">(주)교보문고<br>배송상품</td>
+      <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.commissionKyobo || ''}%</td>
+      <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">(주)교보문고</td>
+      <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">(주)교보문고가 ${data.supplierName || 'ㅁㅁㅁ'}로부터 상품을 공급받아 구매자에게 배송 판매하는 상품</td>
     </tr>
   </tbody>
 </table>
@@ -110,55 +110,25 @@ export const specificPurchaseDeliveryTemplate = (data: ContractData) => `
   <div class="style-subtitle">▪제 2 조 (판매에 따른 역할 및 업무범위)</div>
   <div class="style-body">(주)교보문고와 ${data.supplierName || 'ㅁㅁㅁ'}의 판매에 따른 역할 및 업무범위는 다음과 같다.</div>
 
-  <table class="contract-table">
+  <table class="contract-table" style="width: 100%; border-collapse: collapse;">
     <thead>
       <tr>
-        <th style="width: 20%;">구분</th>
-        <th>역할 및 업무 범위</th>
+        <th style="border: 1px solid #000; padding: 8px; width: 20%; text-align: center; vertical-align: middle;">구분</th>
+        <th style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">역할 및 업무 범위</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>${data.supplierName || 'ㅁㅁㅁ'}<br>배송상품</td>
-        <td style="text-align: left;">① ${data.supplierName || 'ㅁㅁㅁ'}(은)는 구매자 주문상품에 대한 상품포장과 배송책임을 지며, 구매자로부터의 상품 및 배송에 대한 문의 및 불만사항을 접수하여 영업일 기준 24시간이내에 처리하도록 한다.</td>
+        <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.supplierName || 'ㅁㅁㅁ'}<br>배송상품</td>
+        <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">① ${data.supplierName || 'ㅁㅁㅁ'}(은)는 구매자 주문상품에 대한 상품포장과 배송책임을 지며, 구매자로부터의 상품 및 배송에 대한 문의 및 불만사항을 접수하여 영업일 기준 24시간이내에 처리하도록 한다.</td>
       </tr>
       <tr>
-        <td>(주)교보문고<br>배송상품</td>
-        <td style="text-align: left;">① (주)교보문고는 상품포장과 배송책임을 지며, ${data.supplierName || 'ㅁㅁㅁ'}(은)는 상품에 대한 문의 및 불만사항을 접수하여 영업일 기준 24시간이내에 처리하도록 한다.<br>② ${data.supplierName || 'ㅁㅁㅁ'}(은)는 (주)교보문고가 발주한 상품에 대해 (주)교보문고 물류센터에 배송책임을 지며, 반품시 (주)교보문고가 배송책임을 진다.</td>
+        <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">(주)교보문고<br>배송상품</td>
+        <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">① (주)교보문고는 상품포장과 배송책임을 지며, ${data.supplierName || 'ㅁㅁㅁ'}(은)는 상품에 대한 문의 및 불만사항을 접수하여 영업일 기준 24시간이내에 처리하도록 한다.<br>② ${data.supplierName || 'ㅁㅁㅁ'}(은)는 (주)교보문고가 발주한 상품에 대해 (주)교보문고 물류센터에 배송책임을 지며, 반품시 (주)교보문고가 배송책임을 진다.</td>
       </tr>
     </tbody>
   </table>
 
-  <div class="signature-section" style="margin-top: 50px;">
-    <div class="style-bodycenter" style="margin-bottom: 30px;">${data.contractDate || '계약일자 미입력'}</div>
-    
-    <div class="signature-row">
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>서울특별시 종로구 종로 1 (종로 1가, 교보빌딩)</span>
-        </div>
-        <div class="signature-field">
-          <span>(주)교보문고</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>안병현</span>
-        </div>
-      </div>
-      
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>${data.address || '주소 미입력'}</span>
-        </div>
-        <div class="signature-field">
-          <span>${data.supplierName || '업체명 미입력'}</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>${data.ceo || '대표자 미입력'}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  </div>
+  ${getSignatureHTML(data, { kyoboAddress: '서울특별시 종로구 종로 1 (종로 1가, 교보빌딩)', kyoboCeo: '안병현' })}
+</div>
 `;

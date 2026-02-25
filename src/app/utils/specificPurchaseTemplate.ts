@@ -1,6 +1,6 @@
-import { ContractData } from './contractTemplates';
+import { ContractData, getSignatureHTML } from './contractTemplates';
 
-
+// [수정 완료] 특정매입 거래계약서
 export const specificPurchaseTemplate = (data: ContractData) => `
 <div class="contract-page contract-paper">
   <div class="style-title">특정매입 거래계약서</div>
@@ -91,20 +91,20 @@ export const specificPurchaseTemplate = (data: ContractData) => `
 <table class="contract-table editable-table" style="width: 100%; border-collapse: collapse;">
   <thead>
     <tr>
-      <th contenteditable="true" style="border: 1px solid #000; padding: 8px;">점포명</th>
-      <th contenteditable="true" style="border: 1px solid #000; padding: 8px;">카테고리</th>
-      <th contenteditable="true" style="border: 1px solid #000; padding: 8px;">거래품목</th>
-      <th contenteditable="true" style="border: 1px solid #000; padding: 8px;">취급브랜드</th>
-      <th contenteditable="true" style="border: 1px solid #000; padding: 8px;">수수료</th>
+      <th contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">점포명</th>
+      <th contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">카테고리</th>
+      <th contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">거래품목</th>
+      <th contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">취급브랜드</th>
+      <th contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">수수료</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.storeName || '점포명 미입력'}</td>
-      <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.category || '카테고리 미입력'}</td>
-      <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.items || '거래품목 미입력'}</td>
-      <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.brand || '취급브랜드 미입력'}</td>
-      <td contenteditable="true" style="border: 1px solid #000; padding: 8px;">${data.commission || '00'}%</td>
+      <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.storeName || '점포명 미입력'}</td>
+      <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.category || '카테고리 미입력'}</td>
+      <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.items || '거래품목 미입력'}</td>
+      <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.brand || '취급브랜드 미입력'}</td>
+      <td contenteditable="true" style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle;">${data.commission || '00'}%</td>
     </tr>
   </tbody>
 </table>
@@ -123,70 +123,70 @@ export const specificPurchaseTemplate = (data: ContractData) => `
   <table class="contract-table editable-table" style="width: 100%; border-collapse: collapse;">
     <thead>
       <tr>
-        <th style="border: 1px solid #000; padding: 4px;">구분</th><th style="border: 1px solid #000; padding: 4px;">운영층</th><th style="border: 1px solid #000; padding: 4px;">인원수</th>
-        <th style="border: 1px solid #000; padding: 4px;">구분</th><th style="border: 1px solid #000; padding: 4px;">운영층</th><th style="border: 1px solid #000; padding: 4px;">인원수</th>
+        <th style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">구분</th><th style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">운영층</th><th style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">인원수</th>
+        <th style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">구분</th><th style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">운영층</th><th style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;">인원수</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td style="border: 1px solid #000;">광화문점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">강남점</td><td style="border: 1px solid #000;">B1F~B2F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">광화문점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">강남점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F~B2F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">대구점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">잠실점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">대구점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">잠실점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">창원점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">부산점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">창원점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">부산점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">천안점</td><td style="border: 1px solid #000;">4F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">목동점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">천안점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">4F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">목동점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">영등포점</td><td style="border: 1px solid #000;">2F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">수유점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">영등포점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">2F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">수유점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">디큐브시티점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">판교점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">디큐브시티점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">판교점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">전주점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">동대문점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">전주점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">동대문점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">울산점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">일산점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">울산점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">일산점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">송도점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">대전점</td><td style="border: 1px solid #000;">3F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">송도점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">대전점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">3F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">센텀시티점</td><td style="border: 1px solid #000;">7F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">은평점</td><td style="border: 1px solid #000;">3F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">센텀시티점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">7F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">은평점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">3F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">청량리점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">합정점</td><td style="border: 1px solid #000;">B1F~B2F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">청량리점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">합정점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F~B2F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">가든파이브점</td><td style="border: 1px solid #000;">4F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">평촌점</td><td style="border: 1px solid #000;">6F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">가든파이브점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">4F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">평촌점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">6F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">분당점</td><td style="border: 1px solid #000;">B2F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">광교점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">분당점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B2F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">광교점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">천호점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;">거제디큐브</td><td style="border: 1px solid #000;">8F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">천호점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">거제디큐브</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">8F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #000;">건대스타시티점</td><td style="border: 1px solid #000;">B1F</td><td contenteditable="true" style="border: 1px solid #000;">명</td>
-        <td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;">건대스타시티점</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">B1F</td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;">명</td>
+        <td style="border: 1px solid #000; text-align: center; vertical-align: middle;"></td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;"></td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;"></td>
       </tr>
     </tbody>
   </table>
@@ -201,8 +201,8 @@ export const specificPurchaseTemplate = (data: ContractData) => `
   <div class="style-subtitle">제 5 조 (비용분담 및 조건)</div>
   <div class="style-body">① "${data.supplierName || '□□□'}"은(는) "${data.supplierName || '□□□'}"의 부담으로 판촉사원을 파견하며, 파견에 따른 예상이익은 아래와 같다.</div>
   <table class="contract-table editable-table" style="width: 100%; border-collapse: collapse;">
-    <thead><tr><th style="border: 1px solid #000;">예상매출</th><th style="border: 1px solid #000;">예상비용</th><th style="border: 1px solid #000;">예상수익</th><th style="border: 1px solid #000;">비고</th></tr></thead>
-    <tbody><tr><td contenteditable="true" style="border: 1px solid #000; height:30px;"></td><td contenteditable="true" style="border: 1px solid #000;"></td><td contenteditable="true" style="border: 1px solid #000;"></td><td contenteditable="true" style="border: 1px solid #000;"></td></tr></tbody>
+    <thead><tr><th style="border: 1px solid #000; text-align: center; vertical-align: middle;">예상매출</th><th style="border: 1px solid #000; text-align: center; vertical-align: middle;">예상비용</th><th style="border: 1px solid #000; text-align: center; vertical-align: middle;">예상수익</th><th style="border: 1px solid #000; text-align: center; vertical-align: middle;">비고</th></tr></thead>
+    <tbody><tr><td contenteditable="true" style="border: 1px solid #000; height:30px; text-align: center; vertical-align: middle;"></td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;"></td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;"></td><td contenteditable="true" style="border: 1px solid #000; text-align: center; vertical-align: middle;"></td></tr></tbody>
   </table>
   <div class="style-body">* 산출근거 : 예상비용 = (${data.supplierName || '□□□'}) 원가 + 마케팅비용 + 인건비<br>② "${data.supplierName || '□□□'}"은(는) 판촉사원의 사용자로서 부담하여야 할 비용을 부담한다.<br>③ 기타 발생하는 비용분담에 대하여는 ‘(주) 교보문고’와 "${data.supplierName || '□□□'}"이(가) 합의하여 결정한다.</div>
 
@@ -213,77 +213,47 @@ export const specificPurchaseTemplate = (data: ContractData) => `
   <div class="style-body">1. 매장위치</div>
   <table class="contract-table" style="width: 100%; border-collapse: collapse; font-size: 12px;">
     <thead>
-      <tr><th style="border: 1px solid #000;">구분</th><th style="border: 1px solid #000;">점포명</th><th style="border: 1px solid #000;">사업장 소재지</th></tr>
+      <tr><th style="border: 1px solid #000; text-align: center; vertical-align: middle;">구분</th><th style="border: 1px solid #000; text-align: center; vertical-align: middle;">점포명</th><th style="border: 1px solid #000; text-align: center; vertical-align: middle;">사업장 소재지</th></tr>
     </thead>
     <tbody>
-      <tr><td style="border: 1px solid #000;">1</td><td style="border: 1px solid #000;">광화문점</td><td style="border: 1px solid #000;">서울시 종로구 종로 1(종로1가) 교보생명빌딩 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">2</td><td style="border: 1px solid #000;">강남점</td><td style="border: 1px solid #000;">서울시 서초구 강남대로 465(서초동) 교보타워 B2</td></tr>
-      <tr><td style="border: 1px solid #000;">3</td><td style="border: 1px solid #000;">동대문점</td><td style="border: 1px solid #000;">서울시 중구 장충단로13길 20 현대시티아울렛 동대문점 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">4</td><td style="border: 1px solid #000;">디큐브시티점</td><td style="border: 1px solid #000;">서울시 구로구 경인로 662 디큐브백화점 B1 교보문고</td></tr>
-      <tr><td style="border: 1px solid #000;">5</td><td style="border: 1px solid #000;">목동점</td><td style="border: 1px solid #000;">서울시 양천구 목동서로 159-1(목동) CBS빌딩 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">6</td><td style="border: 1px solid #000;">영등포점</td><td style="border: 1px solid #000;">서울시 영등포구 영중로 15(영등포동4가) 타임스퀘어 2F</td></tr>
-      <tr><td style="border: 1px solid #000;">7</td><td style="border: 1px solid #000;">은평점</td><td style="border: 1px solid #000;">서울시 은평구 통일로 1050(진관동 63), 롯데몰 은평점 3F</td></tr>
-      <tr><td style="border: 1px solid #000;">8</td><td style="border: 1px solid #000;">수유점</td><td style="border: 1px solid #000;">서울시 강북구 도봉로 348(번동) 교보생명빌딩 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">9</td><td style="border: 1px solid #000;">잠실점</td><td style="border: 1px solid #000;">서울시 송파구 올림픽로 269(신천동) 롯데캐슬골드 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">10</td><td style="border: 1px solid #000;">청량리점</td><td style="border: 1px solid #000;">서울시 동대문구 왕산로 214, 롯데백화점 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">11</td><td style="border: 1px solid #000;">합정점</td><td style="border: 1px solid #000;">서울시 마포구 월드컵로1길 14 딜라이트스퀘어 A동 B2</td></tr>
-      <tr><td style="border: 1px solid #000;">12</td><td style="border: 1px solid #000;">가든파이브점</td><td style="border: 1px solid #000;">서울시 송파구 충민로 66 가든파이브 현대시티몰 4F</td></tr>
-      <tr><td style="border: 1px solid #000;">13</td><td style="border: 1px solid #000;">광교월드센터</td><td style="border: 1px solid #000;">경기도 수원시 영통구 센트럴타운로 107, 광교 월드스퀘어 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">14</td><td style="border: 1px solid #000;">송도점</td><td style="border: 1px solid #000;">인천시 연수구 송도국제대로 123 현대백화점 프리미엄아울렛 송도점 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">15</td><td style="border: 1px solid #000;">일산점</td><td style="border: 1px solid #000;">경기도 고양시 일산동구 중앙로 1036 고양터미널 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">16</td><td style="border: 1px solid #000;">판교점</td><td style="border: 1px solid #000;">경기도 성남시 분당구 판교역로 146번길 20 (백현동) 현대백화점 B2</td></tr>
-      <tr><td style="border: 1px solid #000;">17</td><td style="border: 1px solid #000;">평촌점</td><td style="border: 1px solid #000;">경기도 안양시 동안구 시민대로 180 롯데백화점 평촌점 6F</td></tr>
-      <tr><td style="border: 1px solid #000;">18</td><td style="border: 1px solid #000;">대전점</td><td style="border: 1px solid #000;">대전시 서구 대덕대로 226, 명동프라자 3F</td></tr>
-      <tr><td style="border: 1px solid #000;">19</td><td style="border: 1px solid #000;">세종점</td><td style="border: 1px solid #000;">세종특별자치시 갈매로 363, 세종파이낸스센터 1차</td></tr>
-      <tr><td style="border: 1px solid #000;">20</td><td style="border: 1px solid #000;">천안점</td><td style="border: 1px solid #000;">천안시 동남구 만남로 43(신부동) 신세계백화점 신관 3F</td></tr>
-      <tr><td style="border: 1px solid #000;">21</td><td style="border: 1px solid #000;">전주점</td><td style="border: 1px solid #000;">전주시 완산구 전주객사 5길 35 NC 웨이브 전주 객사점 B관 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">22</td><td style="border: 1px solid #000;">대구점</td><td style="border: 1px solid #000;">대구시 중구 국채보상로 586(동성로2가) 교보생명빌딩 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">23</td><td style="border: 1px solid #000;">칠곡센터</td><td style="border: 1px solid #000;">대구시 북구 동암로 104 (동천동) 동천빌딩 3F</td></tr>
-      <tr><td style="border: 1px solid #000;">24</td><td style="border: 1px solid #000;">부산점</td><td style="border: 1px solid #000;">부산시 부산진구 중앙대로 658(부전동, 교보생명빌딩 B1)</td></tr>
-      <tr><td style="border: 1px solid #000;">25</td><td style="border: 1px solid #000;">센텀시티점</td><td style="border: 1px solid #000;">부산시 해운대구 센텀남대로 59, 롯데백화점 센텀시티점 7층</td></tr>
-      <tr><td style="border: 1px solid #000;">26</td><td style="border: 1px solid #000;">울산점</td><td style="border: 1px solid #000;">울산시 남구 화합로 185 업스퀘어 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">27</td><td style="border: 1px solid #000;">창원점</td><td style="border: 1px solid #000;">창원시 성산구 중앙대로 104(상남동) 마이우스빌딩 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">28</td><td style="border: 1px solid #000;">경성대,부경대센터</td><td style="border: 1px solid #000;">부산시 남구 수영로 324(대연동), 리마크빌 B2</td></tr>
-      <tr><td style="border: 1px solid #000;">29</td><td style="border: 1px solid #000;">분당점</td><td style="border: 1px solid #000;">성남시 분당구 황새울로312번길 26,센트럴타워 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">30</td><td style="border: 1px solid #000;">광교점</td><td style="border: 1px solid #000;">경기도 수원시 영통구 광교중앙로 145, 광교 엘포트몰 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">31</td><td style="border: 1px solid #000;">광주상무센터</td><td style="border: 1px solid #000;">광주광역시 서구 상무중앙로 58(치평동) 광주 타임스퀘어 3F</td></tr>
-      <tr><td style="border: 1px solid #000;">32</td><td style="border: 1px solid #000;">천호점</td><td style="border: 1px solid #000;">서울시 강동구 올림픽로 664, 대우한강 베네시티 B1</td></tr>
-      <tr><td style="border: 1px solid #000;">33</td><td style="border: 1px solid #000;">거제디큐브</td><td style="border: 1px solid #000;">경남 거제시 장평로 12 디큐브백화점 8F</td></tr>
-      <tr><td style="border: 1px solid #000;">34</td><td style="border: 1px solid #000;">건대스타시티점</td><td style="border: 1px solid #000;">서울특별시 광진구 능동로 92 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">1</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">광화문점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 종로구 종로 1(종로1가) 교보생명빌딩 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">2</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">강남점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 서초구 강남대로 465(서초동) 교보타워 B2</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">3</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">동대문점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 중구 장충단로13길 20 현대시티아울렛 동대문점 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">4</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">디큐브시티점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 구로구 경인로 662 디큐브백화점 B1 교보문고</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">5</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">목동점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 양천구 목동서로 159-1(목동) CBS빌딩 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">6</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">영등포점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 영등포구 영중로 15(영등포동4가) 타임스퀘어 2F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">7</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">은평점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 은평구 통일로 1050(진관동 63), 롯데몰 은평점 3F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">8</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">수유점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 강북구 도봉로 348(번동) 교보생명빌딩 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">9</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">잠실점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 송파구 올림픽로 269(신천동) 롯데캐슬골드 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">10</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">청량리점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 동대문구 왕산로 214, 롯데백화점 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">11</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">합정점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 마포구 월드컵로1길 14 딜라이트스퀘어 A동 B2</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">12</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">가든파이브점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 송파구 충민로 66 가든파이브 현대시티몰 4F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">13</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">광교월드센터</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">경기도 수원시 영통구 센트럴타운로 107, 광교 월드스퀘어 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">14</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">송도점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">인천시 연수구 송도국제대로 123 현대백화점 프리미엄아울렛 송도점 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">15</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">일산점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">경기도 고양시 일산동구 중앙로 1036 고양터미널 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">16</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">판교점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">경기도 성남시 분당구 판교역로 146번길 20 (백현동) 현대백화점 B2</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">17</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">평촌점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">경기도 안양시 동안구 시민대로 180 롯데백화점 평촌점 6F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">18</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">대전점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">대전시 서구 대덕대로 226, 명동프라자 3F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">19</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">세종점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">세종특별자치시 갈매로 363, 세종파이낸스센터 1차</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">20</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">천안점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">천안시 동남구 만남로 43(신부동) 신세계백화점 신관 3F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">21</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">전주점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">전주시 완산구 전주객사 5길 35 NC 웨이브 전주 객사점 B관 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">22</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">대구점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">대구시 중구 국채보상로 586(동성로2가) 교보생명빌딩 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">23</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">칠곡센터</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">대구시 북구 동암로 104 (동천동) 동천빌딩 3F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">24</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">부산점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">부산시 부산진구 중앙대로 658(부전동, 교보생명빌딩 B1)</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">25</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">센텀시티점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">부산시 해운대구 센텀남대로 59, 롯데백화점 센텀시티점 7층</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">26</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">울산점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">울산시 남구 화합로 185 업스퀘어 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">27</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">창원점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">창원시 성산구 중앙대로 104(상남동) 마이우스빌딩 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">28</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">경성대,부경대센터</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">부산시 남구 수영로 324(대연동), 리마크빌 B2</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">29</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">분당점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">성남시 분당구 황새울로312번길 26,센트럴타워 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">30</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">광교점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">경기도 수원시 영통구 광교중앙로 145, 광교 엘포트몰 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">31</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">광주상무센터</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">광주광역시 서구 상무중앙로 58(치평동) 광주 타임스퀘어 3F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">32</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">천호점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울시 강동구 올림픽로 664, 대우한강 베네시티 B1</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">33</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">거제디큐브</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">경남 거제시 장평로 12 디큐브백화점 8F</td></tr>
+      <tr><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">34</td><td style="border: 1px solid #000; text-align: center; vertical-align: middle;">건대스타시티점</td><td style="border: 1px solid #000; text-align: left; padding-left: 10px; vertical-align: middle;">서울특별시 광진구 능동로 92 B1</td></tr>
     </tbody>
   </table>
   <div class="style-body">2. 매장면적 : [별첨1] 1항 해당점포의 카테고리 코너 內 합의 된 공간<br>3. 기타사항 : (주) 교보문고의 운영점포의 신규점포개설 및 폐점이 있을 경우 (주) 교보문고는 서면(전자우편포함)또는 협력사네트워크[SCM](https://scm.kyobobook.co.kr/)를 통해 안내한다.</div>
 
-  <div class="signature-section" style="margin-top: 50px;">
-    <div class="style-bodycenter" style="margin-bottom: 30px;">${data.contractDate || '계약일자 미입력'}</div>
-    
-    <div class="signature-row">
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>서울특별시 종로구 종로 1 (종로 1가, 교보빌딩)</span>
-        </div>
-        <div class="signature-field">
-          <span>(주) 교보문고</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>안병현</span>
-        </div>
-      </div>
-      
-      <div class="signature-party">
-        <div class="signature-field">
-          <span>${data.address || '주소 미입력'}</span>
-        </div>
-        <div class="signature-field">
-          <span>${data.supplierName || '업체명 미입력'}</span>
-        </div>
-        <div class="signature-field">
-          <span class="signature-label">대표이사</span>
-          <span>${data.ceo || '대표자 미입력'}</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  ${getSignatureHTML(data, { kyoboAddress: '서울특별시 종로구 종로 1 (종로 1가, 교보빌딩)', kyoboCeo: '안병현' })}
 </div>
 `;
