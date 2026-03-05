@@ -3,7 +3,6 @@ import { getContractTemplate, ContractData } from './utils/contractTemplates';
 import { CONTRACT_CONFIG } from './utils/contractConfig';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import bwipjs from 'bwip-js';
 import { 
   Undo, Redo, Printer, 
   RotateCcw, Check, Save, RefreshCw, AlertTriangle, Calendar, 
@@ -23,14 +22,6 @@ const FONT_COLORS = [
   '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9900FF', '#FF00FF', 
   '#f87171', '#fbbf24', '#a3e635', '#38bdf8', '#818cf8', '#e879f9'
 ];
-
-const formatBusinessNumber = (value: string) => {
-  const numbers = value.replace(/[^0-9]/g, '');
-  let formatted = numbers;
-  if (numbers.length > 3) formatted = numbers.slice(0, 3) + '-' + numbers.slice(3);
-  if (numbers.length > 5) formatted = numbers.slice(0, 3) + '-' + numbers.slice(3, 5) + '-' + numbers.slice(5, 10);
-  return formatted;
-};
 
 const formatDateString = (value: string) => {
   const numbers = value.replace(/[^0-9]/g, '');
@@ -62,7 +53,7 @@ export default function App() {
 
   const [contractType, setContractType] = useState<string>('');
   const [basicInfo, setBasicInfo] = useState({
-    supplierCode: '', supplierName: '', businessNumber: '', ceo: '', address: '',
+    supplierName: '', ceo: '', address: '',
     contractDate: '', tradeStartDate: '', tradeEndDate: ''
   });
   const [tradeInfo, setTradeInfo] = useState<Record<string, string>>({});
@@ -217,7 +208,7 @@ export default function App() {
   };
 
   const handleReset = () => {
-    setBasicInfo({ supplierCode: '', supplierName: '', businessNumber: '', ceo: '', address: '', contractDate: '', tradeStartDate: '', tradeEndDate: '' });
+    setBasicInfo({ supplierName: '', ceo: '', address: '', contractDate: '', tradeStartDate: '', tradeEndDate: '' });
     setTradeInfo({});
   };
 
@@ -436,7 +427,7 @@ export default function App() {
   const removeTableColumn = () => { if(selectedTable && selectedTable.rows[0].cells.length > 1) { for(let i=0; i<selectedTable.rows.length; i++) { selectedTable.rows[i].deleteCell(selectedTable.rows[i].cells.length-1); } } };
 
   // =================================================================
-  // [핵심] PDF 저장 로직
+  // [핵심] PDF 저장 로직 (최적화 + 스마트 페이지네이션 수정)
   // =================================================================
   const getFileName = (ext: string) => {
     const supplier = basicInfo.supplierName || '매입처명';
@@ -444,7 +435,7 @@ export default function App() {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
-    const typeNameMap: Record<string, string> = { 'direct': '직매입 거래계약서', 'directPB': '제조 위탁 계약서', 'specific': '특정 매입 거래계약서', 'specificDelivery': '배송 대행 약서' };
+    const typeNameMap: Record<string, string> = { 'direct': '직매입 거래계약서', 'directPB': '제조 위탁 계약서', 'specific': '특정 매입 거래계약서', 'specificDelivery': '배송 대행 ���약서' };
     const typeName = typeNameMap[contractType] || '거래계약서';
     return `${typeName}_${supplier}_${yyyy}${mm}${dd}.${ext}`;
   };
@@ -476,6 +467,7 @@ export default function App() {
       
       document.body.style.cursor = 'wait';
 
+      // 1. [스마트 페이지네이션] 페이지 분할 로직 수정
       const container = document.createElement('div');
       Object.assign(container.style, { position: 'fixed', top: '0', left: '-10000px', zIndex: '-1000', fontFamily: 'sans-serif', width: '210mm' });
       document.body.appendChild(container);
@@ -491,28 +483,33 @@ export default function App() {
       };
 
       let currentPage = createNewPage();
-      const PAGE_HEIGHT_PX = 297 * 3.78; 
+      const PAGE_HEIGHT_PX = 297 * 3.78; // A4 높이 (~1123px)
       const TOLERANCE = 5;
       
+      // [수정된 로직] 요소를 추가해보고 넘치면 다음 페이지로 이동
       const appendElementWithSmartSplit = (element: HTMLElement) => {
-          currentPage.style.height = 'auto'; 
-          currentPage.appendChild(element);  
+          currentPage.style.height = 'auto'; // 높이 제한 해제
+          currentPage.appendChild(element);  // 일단 추가
           
           const currentHeight = currentPage.scrollHeight;
-          currentPage.style.height = '297mm'; 
+          currentPage.style.height = '297mm'; // 다시 고정
 
           if (currentHeight > PAGE_HEIGHT_PX + TOLERANCE) {
               const tagName = element.tagName;
+              // 분할 가능한 요소인지 체크 (Table, 혹은 텍스트가 있는 P, Div 등)
+              // IMG, SVG 등 단일 덩어리는 제외
               const isSplittable = tagName === 'TABLE' || (element.hasChildNodes() && !['IMG', 'SVG', 'VIDEO', 'HR'].includes(tagName));
 
               if (isSplittable) {
                   splitLargeElement(element);
               } else {
+                  // 분할 불가 요소이고, 페이지에 이미 다른 내용이 있다면 다음 페이지로
                   if (currentPage.children.length > 1) {
                       currentPage.removeChild(element);
                       currentPage = createNewPage();
                       appendElementWithSmartSplit(element);
                   }
+                  // 혼자 있어도 넘치면 어쩔 수 없음 (그냥 둠)
               }
           }
       };
@@ -520,6 +517,7 @@ export default function App() {
       const splitLargeElement = (element: HTMLElement) => {
           currentPage.style.height = 'auto';
           
+          // A. 테이블 분할 (기존 로직)
           if (element.tagName === 'TABLE') {
               const table = element as HTMLTableElement;
               const thead = table.querySelector('thead');
@@ -568,73 +566,116 @@ export default function App() {
                   }
               }
           }
+          // B. 텍스트 컨테이너(문단) 분할 (새로운 로직)
+          // 텍스트를 포함할 수 있는 요소(P, DIV 등)를 단어/행 단위로 잘라서 배치
           else if (element.hasChildNodes() && !['IMG', 'SVG', 'VIDEO'].includes(element.tagName)) {
+            // 1. 원본 제거
             currentPage.removeChild(element);
             
+            // 2. 루트 컨테이너(껍데기) 생성 및 경로 초기화
+            // currentPath: 현재 텍스트를 집어넣고 있는 DOM 트리의 말단 경로 ([P] -> [P, SPAN] -> [P, SPAN, B] 등)
             let rootClone = element.cloneNode(false) as HTMLElement;
             currentPage.appendChild(rootClone);
             let currentPath: HTMLElement[] = [rootClone];
 
+            // 3. 페이지가 넘칠 때 경로를 복구하는 헬퍼 함수
             const rebuildPathInNewPage = () => {
                const newPath: HTMLElement[] = [];
                let parent: HTMLElement | null = null;
                
                for (let i = 0; i < currentPath.length; i++) {
+                   // 껍데기만 복사 (스타일 유지)
                    const newClone = currentPath[i].cloneNode(false) as HTMLElement;
-                   if (i === 0) currentPage.appendChild(newClone);
-                   else parent!.appendChild(newClone);
+                   
+                   if (i === 0) {
+                       currentPage.appendChild(newClone);
+                   } else {
+                       parent!.appendChild(newClone);
+                   }
                    newPath.push(newClone);
                    parent = newClone;
                }
                return newPath;
             };
 
+            // 4. 재귀적 탐색 및 분할 함수
             const traverseAndSplit = (node: Node) => {
+                // (1) 텍스트 노드인 경우 -> 단어 단위로 쪼개서 넣기
                 if (node.nodeType === Node.TEXT_NODE) {
                     const textContent = node.nodeValue || '';
+                    // 공백을 포함하여 분리 (단어 단위 줄바꿈 보존)
                     const words = textContent.split(/(\s+)/); 
 
                     for (const word of words) {
                         const target = currentPath[currentPath.length - 1];
                         target.appendChild(document.createTextNode(word));
 
+                        // 높이 체크
                         if (currentPage.scrollHeight > PAGE_HEIGHT_PX + TOLERANCE) {
+                           // 넘침! -> 방금 넣은 단어 빼기
                            target.removeChild(target.lastChild!);
+                           
+                           // 페이지 교체
                            currentPage.style.height = '297mm';
                            currentPage = createNewPage();
                            currentPage.style.height = 'auto';
+                           
+                           // 새 페이지에 기존 태그 구조(스타일) 복구
                            currentPath = rebuildPathInNewPage();
+                           
+                           // 다시 추가
                            currentPath[currentPath.length - 1].appendChild(document.createTextNode(word));
                         }
                     }
                 } 
+                // (2) 요소 노드인 경우 (SPAN, B, I, BR 등)
                 else if (node.nodeType === Node.ELEMENT_NODE) {
                     const el = node as HTMLElement;
+                    
                     if (el.tagName === 'BR') {
                          const target = currentPath[currentPath.length - 1];
                          target.appendChild(document.createElement('br'));
+                         
                          if (currentPage.scrollHeight > PAGE_HEIGHT_PX + TOLERANCE) {
                              target.removeChild(target.lastChild!);
                              currentPage.style.height = '297mm';
                              currentPage = createNewPage();
                              currentPage.style.height = 'auto';
                              currentPath = rebuildPathInNewPage();
+                             // 줄바꿈은 새 페이지 첫머리에 굳이 필요없을 수 있으나 원본 유지 차원에서 추가
+                             // (단, 첫 줄이 비어보일 수 있음. 필요시 생략 가능하나 여기선 추가함)
                              currentPath[currentPath.length - 1].appendChild(document.createElement('br'));
                          }
                     } else {
+                        // 일반 인라인/블록 요소 (스타일 컨테이너)
                         const clone = el.cloneNode(false) as HTMLElement;
                         currentPath[currentPath.length - 1].appendChild(clone);
+                        
+                        // 경로 진입
                         currentPath.push(clone);
-                        for (const child of Array.from(el.childNodes)) traverseAndSplit(child);
+                        
+                        // 자식 노드들에 대해 재귀 호출
+                        for (const child of Array.from(el.childNodes)) {
+                            traverseAndSplit(child);
+                        }
+                        
+                        // 경로 복귀
                         currentPath.pop(); 
                     }
                 }
             };
 
-            for (const child of Array.from(element.childNodes)) traverseAndSplit(child);
+            // 탐색 시작
+            for (const child of Array.from(element.childNodes)) {
+                traverseAndSplit(child);
+            }
+          }
+          // C. 기타 요소
+          else {
+              // 분할 불가 -> 그대로 둠
           }
           
-          currentPage.style.height = '297mm'; 
+          currentPage.style.height = '297mm'; // 마무리 높이 고정
       };
 
       const childNodes = Array.from((sourceElement.querySelector('.contract-page') || sourceElement).children) as HTMLElement[];
@@ -642,27 +683,6 @@ export default function App() {
           appendElementWithSmartSplit(child.cloneNode(true) as HTMLElement);
       }
       
-      try {
-        const dmRawDate = (basicInfo.contractDate || '').replace(/-/g, '');
-        const dmRawCode = (basicInfo.supplierCode || '').replace(/[^0-9]/g, '');
-        const dmRawBizNum = (basicInfo.businessNumber || '').replace(/-/g, '');
-        const dmContent = `04${dmRawDate}${dmRawCode}${dmRawBizNum}`;
-
-        const dmCanvas = document.createElement('canvas');
-        bwipjs.toCanvas(dmCanvas, { bcid: 'datamatrix', text: dmContent, scale: 3, padding: 0 });
-        const dmDataUrl = dmCanvas.toDataURL('image/png');
-
-        for (const page of pages) {
-          const dmImg = document.createElement('img');
-          dmImg.src = dmDataUrl;
-          Object.assign(dmImg.style, { position: 'absolute', top: '2mm', left: '2mm', width: '15mm', height: '15mm', zIndex: '10' });
-          dmImg.alt = 'DataMatrix';
-          page.insertBefore(dmImg, page.firstChild);
-        }
-      } catch (dmErr) {
-        console.warn('Data Matrix 바코드 생성 실패:', dmErr);
-      }
-
       const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
 
       const flattenStyles = (node: HTMLElement) => {
@@ -697,12 +717,15 @@ export default function App() {
       for (let i = 0; i < pageNodes.length; i++) {
           doc.body.innerHTML = '';
           doc.body.appendChild(pageNodes[i].cloneNode(true));
+          
           await new Promise(r => setTimeout(r, 50));
+          
           const canvas = await html2canvas(doc.body, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
           const imgData = canvas.toDataURL('image/jpeg', 0.75);
           
-          if (format === 'jpg') { } 
-          else {
+          if (format === 'jpg') {
+             // JPG 로직 (생략)
+          } else {
              if (i > 0) pdf.addPage();
              pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
           }
@@ -841,23 +864,13 @@ export default function App() {
               <section className="mb-6">
                 <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3">매입처기본정보</h4>
                 <div className="space-y-2">
-                  {[{ label: '매입처코드', key: 'supplierCode' }, { label: '매입처명', key: 'supplierName' }, { label: '사업자등록번호', key: 'businessNumber' }, { label: '대표이사', key: 'ceo' }, { label: '사업장주소', key: 'address' }].map((item) => (
+                  {[{ label: '매입처명', key: 'supplierName' }, { label: '대표이사', key: 'ceo' }, { label: '사업장주소', key: 'address' }].map((item) => (
                     <div key={item.key} className={`grid ${isMobile ? 'grid-cols-1 gap-1' : 'grid-cols-[150px_1fr] gap-2 items-center'}`}>
                       <label className={`bg-gray-50 px-3 py-2 text-sm text-gray-700 ${isMobile ? 'font-semibold' : ''}`}>{item.label}</label>
                       <input type="text" value={basicInfo[item.key as keyof typeof basicInfo]}
-                        onChange={(e) => {
-                          if (item.key === 'businessNumber') {
-                            handleBasicInfoChange(item.key, formatBusinessNumber(e.target.value));
-                          } else if (item.key === 'supplierCode') {
-                            const numbersOnly = e.target.value.replace(/[^0-9]/g, '');
-                            handleBasicInfoChange(item.key, numbersOnly.slice(0, 7));
-                          } else {
-                            handleBasicInfoChange(item.key, e.target.value);
-                          }
-                        }}
-                        maxLength={item.key === 'businessNumber' ? 12 : item.key === 'supplierCode' ? 7 : undefined}
+                        onChange={(e) => handleBasicInfoChange(item.key, e.target.value)}
                         className={`border border-gray-300 px-3 ${isMobile ? 'py-3' : 'py-2'} rounded text-sm focus:outline-none focus:border-[#5c7cfa]`}
-                        placeholder={item.key === 'businessNumber' ? '000-00-00000' : item.key === 'supplierCode' ? '7자리 숫자' : `${item.label} 입력`} />
+                        placeholder={`${item.label} 입력`} />
                     </div>
                   ))}
                   {[{ label: '계약일자', key: 'contractDate' }, { label: '거래시작일자', key: 'tradeStartDate' }, { label: '거래종료일자', key: 'tradeEndDate' }].map((item) => (
@@ -911,6 +924,7 @@ export default function App() {
 
           <div className="w-[20%] h-full bg-white border-l border-gray-300 overflow-y-auto p-6 print:hidden">
             <h3 className="text-lg font-semibold text-[#3e5168] mb-6">텍스트 서식</h3>
+            {/* ... (서식 도구 컴포넌트들: 크기, 스타일, 색상, 정렬 등 유지) ... */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">크기</label>
               <div className="flex gap-2">
@@ -948,6 +962,7 @@ export default function App() {
             </div>
             {selectedTable && (
               <div className="space-y-4 pt-4 border-t border-gray-200">
+                {/* ... (표 편집 도구들 유지) ... */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-2">표 전체 크기</label>
                   <div className="grid grid-cols-2 gap-2">
@@ -1009,7 +1024,7 @@ export default function App() {
           </div>
         </>
       )}
-
+      {/* ... (모바일 뷰 코드) ... */}
       {isMobile && (
         <div className="w-full flex flex-col h-[100dvh] print:hidden">
           <Tabs value={mobileTab} onValueChange={(v: string) => setMobileTab(v as 'input' | 'preview')} className="flex flex-col h-full">
@@ -1020,8 +1035,8 @@ export default function App() {
                 <TabsTrigger value="preview">미리보기</TabsTrigger>
               </TabsList>
             </div>
-            
             <TabsContent value="input" className="flex-1 overflow-y-auto p-4 bg-gray-50 mt-0">
+              {/* 모바일용 입력 폼 */}
               <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
                 <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3 rounded-t-sm">계약서 양식</h4>
                 <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 gap-2'}`}>
@@ -1036,23 +1051,13 @@ export default function App() {
               <section className="mb-6 bg-white p-4 rounded-lg shadow-sm">
                 <h4 className="bg-[#5c7cfa] text-white px-4 py-2 text-sm font-medium mb-3 rounded-t-sm">매입처기본정보</h4>
                 <div className="space-y-3">
-                  {[{ label: '매입처코드', key: 'supplierCode' }, { label: '매입처명', key: 'supplierName' }, { label: '사업자등록번호', key: 'businessNumber' }, { label: '대표이사', key: 'ceo' }, { label: '사업장주소', key: 'address' }].map((item) => (
+                  {[{ label: '매입처명', key: 'supplierName' }, { label: '대표이사', key: 'ceo' }, { label: '사업장주소', key: 'address' }].map((item) => (
                     <div key={item.key} className="flex flex-col gap-1">
                       <label className="text-sm font-semibold text-gray-700">{item.label}</label>
                       <input type="text" value={basicInfo[item.key as keyof typeof basicInfo]}
-                        onChange={(e) => {
-                          if (item.key === 'businessNumber') {
-                            handleBasicInfoChange(item.key, formatBusinessNumber(e.target.value));
-                          } else if (item.key === 'supplierCode') {
-                            const numbersOnly = e.target.value.replace(/[^0-9]/g, '');
-                            handleBasicInfoChange(item.key, numbersOnly.slice(0, 7));
-                          } else {
-                            handleBasicInfoChange(item.key, e.target.value);
-                          }
-                        }}
-                        maxLength={item.key === 'businessNumber' ? 12 : item.key === 'supplierCode' ? 7 : undefined}
+                        onChange={(e) => handleBasicInfoChange(item.key, e.target.value)}
                         className="border border-gray-300 px-3 py-3 rounded text-sm focus:outline-none focus:border-[#5c7cfa] w-full"
-                        placeholder={item.key === 'businessNumber' ? '000-00-00000' : item.key === 'supplierCode' ? '7자리 숫자' : `${item.label} 입력`} />
+                        placeholder={`${item.label} 입력`} />
                     </div>
                   ))}
                   {[{ label: '계약일자', key: 'contractDate' }, { label: '거래시작일자', key: 'tradeStartDate' }, { label: '거래종료일자', key: 'tradeEndDate' }].map((item) => (
@@ -1081,16 +1086,13 @@ export default function App() {
                 </div>
               </section>
 
-              <div className="h-20"></div>
-
-              <section className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex flex-wrap gap-2 z-40 pb-6">
+              <section className="flex flex-wrap gap-2 pb-24">
                   <button onClick={handleReset} className="flex-1 bg-gray-500 text-white px-3 py-2.5 rounded hover:bg-gray-600 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><RotateCcw className="w-4 h-4" />초기화</button>
                   <button onClick={handleApply} className="flex-1 bg-[#5c7cfa] text-white px-3 py-2.5 rounded hover:bg-[#4c6cdf] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Check className="w-4 h-4" />적용</button>
                   <button onClick={handleSaveClick} className="flex-1 bg-[#51cf66] text-white px-3 py-2.5 rounded hover:bg-[#40c057] transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><Save className="w-4 h-4" />저장</button>
                   <button onClick={() => setShowResetConfirm(true)} className="flex-1 bg-red-600 text-white px-3 py-2.5 rounded hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"><RefreshCw className="w-4 h-4" /><span className="leading-none text-center">전체<br/>초기화</span></button>
               </section>
             </TabsContent>
-
             <TabsContent value="preview" className="flex-1 overflow-hidden relative mt-0 bg-gray-200">
                <div className="absolute inset-0 overflow-auto p-4 flex justify-center items-start">
                   <div className="w-fit">
@@ -1098,10 +1100,10 @@ export default function App() {
                   </div>
                </div>
                <div className="fixed bottom-6 right-6 flex items-center gap-3 z-50">
-                  <button onClick={handleUndo} disabled={historyIndex <= 0} className="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center disabled:opacity-30 active:bg-gray-100"><Undo className="w-6 h-6"/></button>
-                  <button onClick={handleRedo} disabled={historyIndex >= history.length - 1} className="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center disabled:opacity-30 active:bg-gray-100"><Redo className="w-6 h-6"/></button>
-                  <button onClick={() => setShowResetConfirm(true)} className="w-12 h-12 rounded-full bg-red-600 shadow-lg flex items-center justify-center text-white hover:bg-red-700"><RefreshCw className="w-6 h-6"/></button>
-                  <button onClick={handleSaveClick} className="w-14 h-14 rounded-full bg-[#51cf66] shadow-lg flex items-center justify-center text-white active:bg-[#40c057] hover:bg-[#40c057]"><Save className="w-7 h-7"/></button>
+                  <button onClick={handleUndo} disabled={historyIndex <= 0} className="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center disabled:opacity-30"><Undo className="w-6 h-6"/></button>
+                  <button onClick={handleRedo} disabled={historyIndex >= history.length - 1} className="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center disabled:opacity-30"><Redo className="w-6 h-6"/></button>
+                  <button onClick={() => setShowResetConfirm(true)} className="w-12 h-12 rounded-full bg-red-600 shadow-lg flex items-center justify-center text-white"><RefreshCw className="w-6 h-6"/></button>
+                  <button onClick={handleSaveClick} className="w-14 h-14 rounded-full bg-[#51cf66] shadow-lg flex items-center justify-center text-white"><Save className="w-7 h-7"/></button>
                </div>
             </TabsContent>
           </Tabs>
