@@ -183,8 +183,22 @@ export default function App() {
 
   const handleContractTypeSelect = (type: string) => {
     setContractType(type);
-    setTradeInfo({}); 
-    const template = getContractTemplate(type, { ...basicInfo, tradePeriod: '', ...tradeInfo });
+    setTradeInfo({});
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 89);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const todayStr = fmt(today);
+    const endStr = fmt(endDate);
+    const newBasicInfo = {
+      ...basicInfo,
+      contractDate: basicInfo.contractDate || todayStr,
+      tradeStartDate: basicInfo.tradeStartDate || todayStr,
+      tradeEndDate: basicInfo.tradeEndDate || endStr,
+    };
+    setBasicInfo(newBasicInfo);
+    const template = getContractTemplate(type, { ...newBasicInfo, tradePeriod: '', ...tradeInfo });
     setCurrentEditorContent(template);
     setHistory([template]);
     setHistoryIndex(0);
